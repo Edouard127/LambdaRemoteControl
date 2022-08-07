@@ -1,4 +1,5 @@
 # Lambda Remote Control
-<p align="center">
-<iframe width="560" height="315" src="https://www.youtube.com/embed/jHUyMA1qg6U" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</p>
+
+<a href="https://youtu.be/jHUyMA1qg6U" target="_blank">
+ <img src="http://img.youtube.com/vi/jHUyMA1qg6U/mqdefault.jpg" alt="Watch the video" width="240" height="180" border="10" />
+</a>
