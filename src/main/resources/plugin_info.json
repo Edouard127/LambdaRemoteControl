@@ -1,11 +1,9 @@
 {
-  "name": "ExamplePlugin",
-  "version": "1.1",
-  "description": "Example implementation of a plugin for Lambda.",
-  "url": "https://github.com/lambda-client/ExamplePlugin",
-  "authors": [ "me", "you" ],
-  "main_class": "com.lambda.ExamplePlugin",
-  "min_api_version": "3.2",
-  "mixins": [ "mixins.ExamplePlugin.json" ],
-  "required_plugins": []
+  "name": "LambdaRemoteControl",
+  "version": "1.0",
+  "description": "Remotely control your game using TCP sockets",
+  "url": "https://github.com/Edouard127/LambdaRemoteControl",
+  "authors": [ "Kamigen" ],
+  "main_class": "com.lambda.SocketPlugin",
+  "min_api_version": "3.2"
 }
