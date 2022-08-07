@@ -1,3 +1,3 @@
 # Lambda Remote Control
 
-[Watch the video](https://cdn.discordapp.com/attachments/834570721070022691/1005958485336395918/2022-08-07_17-57-46.mp4)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/jHUyMA1qg6U" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
