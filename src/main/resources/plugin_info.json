@@ -1,6 +1,6 @@
 {
   "name": "LambdaRemoteControl",
-  "version": "1.0",
+  "version": "0.1-UNSTABLE",
   "description": "Remotely control your game using TCP sockets",
   "url": "https://github.com/Edouard127/LambdaRemoteControl",
   "authors": [ "Kamigen" ],
