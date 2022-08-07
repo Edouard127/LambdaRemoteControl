@@ -70,14 +70,13 @@ internal object RemoteControl : PluginModule(
                         val line = breader.readLine()
                         if (line != null) {
                             val decompressed = line.decode()
-                            println(decompressed)
                             val bit = decompressed.split(" ")
                             val args: Array<String> = bit.drop(1).toTypedArray()
                             when (bit[0]) {
                                 "0" -> logout("Client received command ${bit[0]}")
                                 "PING" -> sendString(bwriter, listOf("1", '"'+bit[1]+'"').toString())
-                                "2" -> login(ServerData(bit[1], bit[2], false))
-                                "3" -> logout("Client received command ${bit[0]}")
+                                //"2" -> login(ServerData(bit[1], bit[2], false))
+                                //"3" -> logout("Client received command ${bit[0]}")
                                 "6" -> MessageSendHelper.sendServerMessage(args.joinToString(" "))
                                 "7" -> MessageSendHelper.sendBaritoneCommand(*args)
                                 "8" -> CommandManager.runCommand(args.joinToString(" "))
@@ -113,13 +112,23 @@ internal object RemoteControl : PluginModule(
     }
 
     private fun login(server: ServerData) {
-        FMLClientHandler.instance().connectToServer(mc.currentScreen, server);
+        try {
+            FMLClientHandler.instance().connectToServer(mc.currentScreen, server);
+        } catch (e: Exception) {
+            println("Could not login ${e.message}")
+            MessageSendHelper.sendChatMessage("Could not login ${e.message}")
+        }
     }
     private fun logout(reason: String) {
-        mc.connection?.networkManager?.closeChannel(TextComponentString(""))
-        mc.loadWorld(null as WorldClient?)
+        try {
+            mc.connection?.networkManager?.closeChannel(TextComponentString(""))
+            mc.loadWorld(null as WorldClient?)
 
-        mc.displayGuiScreen(LambdaGuiDisconnected(arrayOf(reason), getScreen(), true, LocalTime.now()))
+            mc.displayGuiScreen(LambdaGuiDisconnected(arrayOf(reason), getScreen(), true, LocalTime.now()))
+        } catch (e: Exception) {
+            println("Could not logout ${e.message}")
+            MessageSendHelper.sendChatMessage("Could not logout ${e.message}")
+        }
     }
 
     private fun getScreen() = if (mc.isIntegratedServerRunning) {
