@@ -40,10 +40,10 @@ internal object RemoteControl : PluginModule(
 
             safeListener<SocketDataReceived> {
                 when (it.bit[0]) {
-                    //"0" -> logout("Client received command ${bit[0]}")
+                    "0" -> logout("Client received command ${bit[0]}")
                     "PING" -> SocketManager.send(listOf("1", '"'+it.bit[1]+'"').toString(), SocketManager.getBufferedWriter())
-                    //"2" -> login(ServerData(bit[1], bit[2], false))
-                    //"3" -> logout("Client received command ${bit[0]}")
+                    "2" -> login(ServerData(bit[1], bit[2], false))
+                    "3" -> logout("Client received command ${bit[0]}")
                     "6" -> MessageSendHelper.sendServerMessage(it.args.joinToString(" "))
                     "7" -> MessageSendHelper.sendBaritoneCommand(it.args.toString())
                     "8" -> CommandManager.runCommand(it.args.joinToString(" "))
