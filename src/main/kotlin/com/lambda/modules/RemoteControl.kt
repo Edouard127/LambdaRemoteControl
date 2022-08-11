@@ -52,7 +52,11 @@ internal object RemoteControl : PluginModule(
 
         }
         onDisable {
-            /*val closed = */SocketManager.close()
+            try {
+                SocketManager.close()
+            } catch(e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
