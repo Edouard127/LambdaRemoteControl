@@ -32,21 +32,21 @@ class SocketManager(server: String, port: Int, password: String) : GameEventMana
     init {
         this.password = password
         this.socket = Socket(server, port)
-        this.outputStreamWriter = OutputStreamWriter(socket.getOutputStream())
-        this.bwriter = BufferedWriter(outputStreamWriter)
-        this.inputStreamReader = InputStreamReader(socket.getInputStream());
-        this.breader = BufferedReader(inputStreamReader);
+        this.outputStreamWriter = OutputStreamWriter(this.socket.getOutputStream())
+        this.bwriter = BufferedWriter(this.outputStreamWriter)
+        this.inputStreamReader = InputStreamReader(this.socket.getInputStream());
+        this.breader = BufferedReader(this.inputStreamReader);
         this.data = listOf("4", '"'+this.password+'"')
     }
     fun init() {
-        this.getBufferedWriter().write("ifrh4fuiorhjforhio")
         Thread {
             try {
+                println(this.data.toString())
 
-                this.send(this.data.toString(), this.bwriter)
+                send(this.data.toString(), this.getBufferedWriter())
 
                 while(true) {
-                    val line = breader.readLine()
+                    val line = this.breader.readLine()
                     if (line != null) {
                         val decompressed = line.decode()
                         val bit = decompressed.split(" ")
@@ -82,7 +82,6 @@ class SocketManager(server: String, port: Int, password: String) : GameEventMana
     }
 
     override fun send(data: String, bw: BufferedWriter) {
-        bw.write("cyiurhe4fuirht4ufhr4ueo")
         try {
             bw.write(data.trimIndent().encode()+"\r\n")
         } catch (e: Exception) {
