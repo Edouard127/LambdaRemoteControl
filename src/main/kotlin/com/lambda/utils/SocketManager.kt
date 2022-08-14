@@ -4,8 +4,7 @@ import com.lambda.client.event.Event
 import com.lambda.client.event.SafeClientEvent
 import com.lambda.client.gui.mc.LambdaGuiDisconnected
 import com.lambda.client.util.text.MessageSendHelper
-import com.lambda.interfaces.GameEventManager
-import com.lambda.interfaces.SocketEvent
+import com.lambda.interfaces.*
 import net.minecraft.client.gui.GuiMainMenu
 import net.minecraft.client.gui.GuiMultiplayer
 import net.minecraft.client.gui.GuiScreen
@@ -18,14 +17,14 @@ import java.net.Socket
 import java.time.LocalTime
 import java.util.*
 
-class SocketManager(server: String, port: Int, password: String) : GameEventManager, SocketEvent, Event {
+class SocketManager(server: String, port: Int, password: String, username: String, function: () -> Unit) : GameEventManager, SocketEvent, Event {
 
     private var socket: Socket
     private var outputStreamWriter: OutputStreamWriter
     private var bwriter: BufferedWriter
     private var inputStreamReader: InputStreamReader
     private var breader: BufferedReader
-    private var data: List<String>
+    private var data: String
     private val password: String
     private val SocketEventManager = SocketEventEmitter()
 
@@ -36,23 +35,22 @@ class SocketManager(server: String, port: Int, password: String) : GameEventMana
         this.bwriter = BufferedWriter(this.outputStreamWriter)
         this.inputStreamReader = InputStreamReader(this.socket.getInputStream());
         this.breader = BufferedReader(this.inputStreamReader);
-        this.data = listOf("4", '"'+this.password+'"')
+        this.data = "4 $username $password"
+        this.Connect()
+
     }
-    fun init() {
+    fun Connect() {
         Thread {
             try {
-                println(this.data.toString())
-
-                send(this.data.toString(), this.getBufferedWriter())
+                send(this.data, getBufferedWriter())
 
                 while(true) {
                     val line = this.breader.readLine()
                     if (line != null) {
-                        val decompressed = line.decode()
-                        val bit = decompressed.split(" ")
+                        val bit = line.split(" ")
                         val args: Array<String> = bit.drop(1).toTypedArray()
 
-                        this.receive(bit, args)
+                        this.receive(bit[0].toByte(), args)
                     }
                 }
             } catch (e: Exception) {
@@ -77,25 +75,33 @@ class SocketManager(server: String, port: Int, password: String) : GameEventMana
         return this.bwriter
     }
 
-    override fun receive(bit: List<String>, vararg args: Array<String>) {
-        this.SocketEventManager.emit(bit, *args)
+    override fun receive(byte: Byte, vararg args: Array<String>) {
+        val packet = Packet(byte)
+        this.SocketEventManager.emit(packet, when(packet.getPacket()) {
+            EPacket.EXIT-> FlagType.BOTH
+            EPacket.OK -> FlagType.SERVER
+            EPacket.HEARTBEAT -> FlagType.SERVER
+            EPacket.LOGIN -> FlagType.SERVER
+            EPacket.LOGOUT -> FlagType.SERVER
+            EPacket.GET_WORKERS -> FlagType.CLIENT
+            EPacket.GET_WORKERS_STATUS -> FlagType.CLIENT
+            EPacket.CHAT -> FlagType.NONE
+            EPacket.BARITONE -> FlagType.NONE
+            EPacket.LAMBDA -> FlagType.NONE
+            EPacket.ERROR -> FlagType.BOTH
+            else -> FlagType.NONE
+        }, *args)
     }
-
     override fun send(data: String, bw: BufferedWriter) {
         try {
-            bw.write(data.trimIndent().encode()+"\r\n")
-        } catch (e: Exception) {
+            bw.write(data)
+            bw.newLine()
+            bw.flush()
+        } catch (e: IOException) {
             e.printStackTrace()
         }
     }
 
-    override fun String.encode(): String {
-        return Base64.getEncoder().encodeToString(this.toByteArray())
-    }
-
-    override fun String.decode(): String {
-        return Base64.getDecoder().decode(this).decodeToString()
-    }
 
     override fun SafeClientEvent.login(server: ServerData) {
         try {
@@ -125,7 +131,7 @@ class SocketManager(server: String, port: Int, password: String) : GameEventMana
             this.bwriter.close()
             this.inputStreamReader.close()
             this.breader.close()
-            this.data = listOf()
+            this.data = ""
         } catch (e: IOException) {
             return false
         }
