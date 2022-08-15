@@ -39,7 +39,7 @@ class SocketManager(server: String, port: Int, password: String, function: () ->
     private fun Connect() {
         Thread {
             try {
-                val packetData = PacketDataBuilder(EPacket.ADD_WORKER, listOf(PacketData(EPacket.ADD_WORKER).defaultData()))
+                val packetData = PacketDataBuilder(EPacket.ADD_WORKER, PacketData(EPacket.ADD_WORKER).defaultData().data)
                 val packet = PacketBuilder(EPacket.ADD_WORKER, packetData)
 
                 send(packet.buildPacket(), getBufferedWriter())
