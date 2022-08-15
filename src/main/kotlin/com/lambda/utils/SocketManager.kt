@@ -39,17 +39,19 @@ class SocketManager(server: String, port: Int, password: String, function: () ->
     private fun Connect() {
         Thread {
             try {
-                val packet = PacketBuilder(EPacket.ADD_WORKER.byte, PacketData(EPacket.ADD_WORKER).defaultData()).buildPacket()
+                val packetData = PacketDataBuilder(EPacket.ADD_WORKER, listOf(PacketData(EPacket.ADD_WORKER).defaultData()))
+                val packet = PacketBuilder(EPacket.ADD_WORKER, packetData)
 
-                send(packet, getBufferedWriter())
+                send(packet.buildPacket(), getBufferedWriter())
 
                 while(true) {
                     val line = this.breader.readLine()
                     if (line != null) {
-                        val byte = line.split(" ")
-                        val args = (byte to ByteArray(byte.size)).second
+                        val epacket = PacketUtils.getPacketId(line.split(" ")[0].toByte())
 
-                        val packetBuilder = Packet(byte[0].toByte(), args)
+                        val packetArgs = PacketBuilder(epacket, PacketDataBuilder(epacket, line.split(" ").drop(1).map { it.toByteArray() }.toList()))
+
+                        val packetBuilder = Packet(epacket.byte, packetArgs.data.writeData())
                         this.receive(packetBuilder)
                     }
                 }
@@ -82,9 +84,12 @@ class SocketManager(server: String, port: Int, password: String, function: () ->
 
     override fun send(packet: Packet, bw: BufferedWriter) {
         try {
-            val byte = packet.packet
-            val args = ArrayUtils.toStringArray(packet.args)
-            bw.write("$byte $args")
+            val epacket = packet.getPacket()
+            val packetData = PacketDataBuilder(epacket, PacketData(epacket).buildPacketData(packet.getPacketListByte()).data)
+
+            val args = PacketBuilder(epacket, packetData)
+
+            bw.write("${args.packet.byte} ${args.getString()}")
             bw.newLine()
             bw.flush()
         } catch (e: IOException) {
