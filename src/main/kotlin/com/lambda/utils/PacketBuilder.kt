@@ -9,7 +9,12 @@ class PacketBuilder(val packet: EPacket, val data: PacketDataBuilder) : IPacketB
     }
 
     override fun getString(): String {
-        return data.data.map { it.toString() }.joinToString(", ")
+        // Return a string of the packet in the format "n args, offset, length, data"
+        val string = StringBuilder()
+        data.writeData().forEach { (t, u) ->
+            string.append("${data.data.size} ${t[0]} ${t[1]} $u\n")
+        }
+        return string.toString()
     }
 
 }
