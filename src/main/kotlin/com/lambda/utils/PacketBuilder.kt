@@ -1,8 +1,15 @@
 package com.lambda.utils
 
+import com.lambda.client.event.SafeClientEvent
 import com.lambda.enums.EPacket
 import com.lambda.interfaces.IPacketBuilder
-import com.lambda.interfaces.IWorker
+import com.lambda.modules.RemoteControl
+import com.lambda.utils.Worker
+import net.minecraft.client.Minecraft
+import org.apache.commons.codec.binary.Hex
+import java.util.*
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 class PacketBuilder(val byte: Byte, val data: ByteArray) : IPacketBuilder {
     override fun buildPacket(): Packet {
@@ -15,7 +22,14 @@ class PacketBuilder(val byte: Byte, val data: ByteArray) : IPacketBuilder {
             EPacket.HEARTBEAT -> defaultHeartbeat
             EPacket.LOGIN -> defaultLogin
             EPacket.LOGOUT -> defaultLogout
+            EPacket.ADD_WORKER -> getWorker()
+            EPacket.REMOVE_WORKER -> getWorker()
             EPacket.GET_WORKERS -> defaultGetWorkers
+            EPacket.GET_WORKERS_STATUS -> defaultGetWorkersStatus
+            EPacket.CHAT -> defaultChat
+            EPacket.BARITONE -> defaultBaritone
+            EPacket.LAMBDA -> defaultLambda
+            EPacket.ERROR -> defaultError
         }
     }
 }
@@ -23,7 +37,24 @@ class PacketBuilder(val byte: Byte, val data: ByteArray) : IPacketBuilder {
 val defaultHeartbeat = byteArrayOf(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
 val defaultLogin = byteArrayOf("2b2t.com.de".toByte(), "25565".toByte())
 val defaultLogout = byteArrayOf("Client received logout packet".toByte())
-val defaultGetWorkers = byteArrayOf()
+val defaultGetWorkers = byteArrayOf() //TODO: Implement this
+val defaultGetWorkersStatus = byteArrayOf() //TODO: Implement this
+val defaultChat = byteArrayOf("Hello World".toByte())
+val defaultBaritone = byteArrayOf("help".toByte())
+val defaultLambda = byteArrayOf("help".toByte())
+val defaultError = byteArrayOf("Client error".toByte())
+
+fun getWorker(): ByteArray {
+    val mc = Minecraft.getMinecraft()
+    return byteArrayOf(mc.player.name.toByte(), createSignature(mc.player.name, RemoteControl.secretKey))
+}
+fun createSignature(data: String, key: String): Byte {
+    val sha256Hmac = Mac.getInstance("HmacSHA256")
+    val secretKey = SecretKeySpec(key.toByteArray(), "HmacSHA256")
+    sha256Hmac.init(secretKey)
+
+    return Hex.encodeHexString(sha256Hmac.doFinal(data.toByteArray())).toByte()
+}
 
 /*fun getWorkerStatus(worker: IWorker): Byte {
     return worker.status.byte
