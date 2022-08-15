@@ -15,9 +15,8 @@ import net.minecraftforge.fml.client.FMLClientHandler
 import java.io.*
 import java.net.Socket
 import java.time.LocalTime
-import java.util.*
 
-class SocketManager(server: String, port: Int, password: String, username: String, function: () -> Unit) : GameEventManager, SocketEvent, Event {
+class SocketManager(server: String, port: Int, password: String, username: String, function: () -> Unit) : IGameEventManager, ISocketEvent, Event {
 
     private var socket: Socket
     private var outputStreamWriter: OutputStreamWriter
@@ -37,9 +36,8 @@ class SocketManager(server: String, port: Int, password: String, username: Strin
         this.breader = BufferedReader(this.inputStreamReader);
         this.data = "4 $username $password"
         this.Connect()
-
     }
-    fun Connect() {
+    private fun Connect() {
         Thread {
             try {
                 send(this.data, getBufferedWriter())
@@ -47,10 +45,11 @@ class SocketManager(server: String, port: Int, password: String, username: Strin
                 while(true) {
                     val line = this.breader.readLine()
                     if (line != null) {
-                        val bit = line.split(" ")
-                        val args: Array<String> = bit.drop(1).toTypedArray()
+                        val byte = line.split(" ")
+                        val args = (byte to ByteArray(byte.size)).second
 
-                        this.receive(bit[0].toByte(), args)
+                        val packetBuilder = Packet(byte[0].toByte(), args)
+                        this.receive(packetBuilder)
                     }
                 }
             } catch (e: Exception) {
@@ -75,23 +74,11 @@ class SocketManager(server: String, port: Int, password: String, username: Strin
         return this.bwriter
     }
 
-    override fun receive(byte: Byte, vararg args: Array<String>) {
-        val packet = Packet(byte)
-        this.SocketEventManager.emit(packet, when(packet.getPacket()) {
-            EPacket.EXIT-> FlagType.BOTH
-            EPacket.OK -> FlagType.SERVER
-            EPacket.HEARTBEAT -> FlagType.SERVER
-            EPacket.LOGIN -> FlagType.SERVER
-            EPacket.LOGOUT -> FlagType.SERVER
-            EPacket.GET_WORKERS -> FlagType.CLIENT
-            EPacket.GET_WORKERS_STATUS -> FlagType.CLIENT
-            EPacket.CHAT -> FlagType.NONE
-            EPacket.BARITONE -> FlagType.NONE
-            EPacket.LAMBDA -> FlagType.NONE
-            EPacket.ERROR -> FlagType.BOTH
-            else -> FlagType.NONE
-        }, *args)
+    override fun receive(packet: Packet) {
+        this.SocketEventManager.emit(packet, packet.getFlags())
     }
+
+
     override fun send(data: String, bw: BufferedWriter) {
         try {
             bw.write(data)

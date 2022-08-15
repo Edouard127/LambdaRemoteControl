@@ -1,11 +1,10 @@
 package com.lambda.utils
 
-import com.lambda.interfaces.FlagType
-import com.lambda.interfaces.Packet
+import com.lambda.enums.EFlagType
 
 
 class SocketEventEmitter {
-    fun emit(bit: Packet, flag: FlagType, vararg args: Array<String>) {
-        SocketDataReceived(bit, flag, *args)
+    fun emit(packet: Packet, flag: EFlagType) {
+        SocketDataReceived(packet, flag)
     }
 }

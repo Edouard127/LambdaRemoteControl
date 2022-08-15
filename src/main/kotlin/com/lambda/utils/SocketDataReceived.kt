@@ -2,7 +2,6 @@ package com.lambda.utils
 
 import com.lambda.client.event.Cancellable
 import com.lambda.client.event.Event
-import com.lambda.interfaces.FlagType
-import com.lambda.interfaces.Packet
+import com.lambda.enums.EFlagType
 
-class SocketDataReceived(val bit: Packet, val type: FlagType, vararg val args: Array<String>) : Event, Cancellable()
+class SocketDataReceived(val packet: Packet, val flag: EFlagType) : Event, Cancellable()
