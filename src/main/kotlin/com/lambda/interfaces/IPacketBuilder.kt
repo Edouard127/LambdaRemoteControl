@@ -5,5 +5,5 @@ import com.lambda.utils.Packet
 
 interface IPacketBuilder {
     fun buildPacket(): Packet
-    fun defaultData(packet: EPacket): ByteArray
+
 }
