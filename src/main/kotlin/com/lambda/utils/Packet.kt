@@ -32,6 +32,8 @@ class Packet(val byte: Byte, val args: ByteArray) : IPacket {
             EPacket.HEARTBEAT -> EFlagType.SERVER
             EPacket.LOGIN -> EFlagType.SERVER
             EPacket.LOGOUT -> EFlagType.SERVER
+            EPacket.ADD_WORKER -> EFlagType.SERVER
+            EPacket.REMOVE_WORKER -> EFlagType.SERVER
             EPacket.GET_WORKERS -> EFlagType.CLIENT
             EPacket.GET_WORKERS_STATUS -> EFlagType.CLIENT
             EPacket.CHAT -> EFlagType.NONE
