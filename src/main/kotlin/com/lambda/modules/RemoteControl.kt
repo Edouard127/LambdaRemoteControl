@@ -4,8 +4,6 @@ import com.lambda.SocketPlugin
 import com.lambda.client.module.Category
 import com.lambda.client.plugin.api.PluginModule
 import com.lambda.client.util.threads.safeListener
-import com.lambda.enums.EPacket
-import com.lambda.interfaces.FlagType
 import com.lambda.utils.SocketDataReceived
 import com.lambda.utils.SocketManager
 import java.util.*
@@ -23,21 +21,23 @@ internal object RemoteControl : PluginModule(
     private val password by setting("Password", "", { passType == PASSWORD_TYPE.NOTRANDOM })
     private val server by setting("Server", "localhost")
     private val port by setting("Port", "1984")
+    val s = when (passType) {
+        PASSWORD_TYPE.RANDOM -> UUID.randomUUID().toString()
+        PASSWORD_TYPE.NOTRANDOM -> password
+    }
+    val secretKey = s.hashCode().toString()
     lateinit var socket: SocketManager
 
     init {
 
         onEnable {
             mc.player.inventory
-            val pass = when (passType) {
-                PASSWORD_TYPE.RANDOM -> UUID.randomUUID().toString()
-                PASSWORD_TYPE.NOTRANDOM -> password
-            }
+
             val parsedInt = port.toInt()
-            socket = SocketManager(server, parsedInt, mc.player.name, pass) {
+            socket = SocketManager(server, parsedInt, s) {
                 safeListener<SocketDataReceived> {
                     // TODO Execute functions
-                    when(it.packet.getPacket()) {
+                    /*when(it.packet.getPacket()) {
                         EPacket.EXIT -> FlagType.BOTH
                         EPacket.OK -> FlagType.SERVER
                         EPacket.HEARTBEAT -> FlagType.SERVER
@@ -49,7 +49,7 @@ internal object RemoteControl : PluginModule(
                         EPacket.BARITONE -> FlagType.NONE
                         EPacket.LAMBDA -> FlagType.NONE
                         EPacket.ERROR -> FlagType.BOTH
-                    }
+                    }*/
                 }
             }
 
