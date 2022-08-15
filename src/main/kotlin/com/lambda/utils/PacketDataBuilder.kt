@@ -4,13 +4,14 @@ import com.lambda.enums.EPacket
 
 class PacketDataBuilder(override val packet: EPacket, override val data: List<ByteArray>) : IPacketDataBuilder {
 
-    override fun writeData(): HashMap<Pair<Int, Int>, ByteArray> {
-        val map = HashMap<Pair<Int, Int>, ByteArray>()
+    override fun writeData(): Map<Map<Int, Int>, ByteArray> {
+        val map: MutableMap<Map<Int, Int>, ByteArray> = hashMapOf()
 
-        for (i in data.indices) {
-            val packetDataLength = data[i].size
-            map[i to packetDataLength] = data[i]
+        // Return a Map with the data of the packet, the map is the offset and the length of the data
+        data.forEach {
+            map[mapOf(it.size to it.size)] = it
         }
+
         return map
     }
 }
@@ -20,5 +21,5 @@ class PacketDataBuilder(override val packet: EPacket, override val data: List<By
 interface IPacketDataBuilder {
     val packet: EPacket
     val data: List<ByteArray>
-    fun writeData(): HashMap<Pair<Int, Int>, ByteArray>
+    fun writeData(): Map<Map<Int, Int>, ByteArray>
 }

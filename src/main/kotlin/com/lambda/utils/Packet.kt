@@ -4,7 +4,7 @@ import com.lambda.enums.EFlagType
 import com.lambda.enums.EPacket
 import com.lambda.interfaces.IPacket
 
-class Packet(val byte: Byte, val args: HashMap<Pair<Int, Int>, ByteArray>) : IPacket {
+class Packet(val byte: Byte, val args: Map<Map<Int, Int>, ByteArray>) : IPacket {
     override fun getPacket(): EPacket {
         return mapOf(
             (0x00).toByte() to EPacket.EXIT,
@@ -21,7 +21,7 @@ class Packet(val byte: Byte, val args: HashMap<Pair<Int, Int>, ByteArray>) : IPa
         )[byte] ?: EPacket.ERROR
     }
 
-    override fun getPacketData(): HashMap<Pair<Int, Int>, ByteArray> {
+    override fun getPacketData(): Map<Map<Int, Int>, ByteArray> {
         return args
     }
 
