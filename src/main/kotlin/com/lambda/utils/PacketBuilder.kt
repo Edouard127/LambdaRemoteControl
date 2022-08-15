@@ -25,7 +25,7 @@ val defaultLogin = byteArrayOf("2b2t.com.de".toByte(), "25565".toByte())
 val defaultLogout = byteArrayOf("Client received logout packet".toByte())
 val defaultGetWorkers = byteArrayOf()
 
-fun getWorkerStatus(worker: IWorker): Byte {
+/*fun getWorkerStatus(worker: IWorker): Byte {
     return worker.status.byte
-}
+}*/
 
