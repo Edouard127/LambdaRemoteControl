@@ -58,12 +58,8 @@ val defaultError = "Client error".encodeToByteArray()
     }
     return workerBytes
 }*/
-fun createWorker(worker: String = "Kamigen"): ByteArray {
-    val workerBytes = ByteArray(worker.length)
-    for (i in worker.indices) {
-        workerBytes[i] = worker[i].code.toByte()
-    }
-    return workerBytes
+fun createWorker(worker: String = "Kamigen", password: String = "password"): ByteArray {
+    return "$worker $password".encodeToByteArray()
 }
 fun createSignature(data: String, key: String): ByteArray {
     val sha256Hmac = Mac.getInstance("HmacSHA256")

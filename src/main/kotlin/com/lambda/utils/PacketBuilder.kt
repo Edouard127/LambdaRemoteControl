@@ -12,7 +12,7 @@ class PacketBuilder(val packet: EPacket, val data: PacketDataBuilder) : IPacketB
         // Return a string of the packet in the format "n args, offset, length, data"
         val string = StringBuilder()
         data.writeData().forEach { (t, u) ->
-            string.append("${data.data.size} ${t[0]} ${t[1]} $u\n")
+            string.append("${data.data.size} ${t[0]} ${t[1]} ${String(u)}\n")
         }
         return string.toString()
     }
