@@ -6,6 +6,7 @@ import com.lambda.enums.EPacket
 interface IPacket {
     val packet: Byte
     fun getPacket(): EPacket
-    fun getPacketData(): ByteArray
+    fun getPacketData(): HashMap<Pair<Int, Int>, ByteArray>
+    fun getPacketListByte(): List<ByteArray>
     fun getFlags(): EFlagType
 }
