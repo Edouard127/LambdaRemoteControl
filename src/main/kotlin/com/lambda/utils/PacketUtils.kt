@@ -24,4 +24,8 @@ object PacketUtils {
     fun getPacketId(data: Byte): EPacket {
         return EPacket.values()[data.toInt()]
     }
+    fun getPacketBuilder(type: EPacket, vararg data: ByteArray): PacketDataBuilder {
+        /* TODO: add support for multiple data types */
+        return PacketDataBuilder(type, data.toList())
+    }
 }

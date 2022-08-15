@@ -17,18 +17,18 @@ import java.io.*
 import java.net.Socket
 import java.time.LocalTime
 
-class SocketManager(server: String, port: Int, password: String, function: () -> Unit) : IGameEventManager, ISocketEvent, Event {
+class SocketManager(server: String, port: Int, username: String, password: String, function: () -> Unit) : IGameEventManager, ISocketEvent, Event {
 
     private var socket: Socket
     private var outputStreamWriter: OutputStreamWriter
     private var bwriter: BufferedWriter
     private var inputStreamReader: InputStreamReader
     private var breader: BufferedReader
-    private val password: String
+    private val password: String = password
+    private val username: String = username
     private val SocketEventManager = SocketEventEmitter()
 
     init {
-        this.password = password
         this.socket = Socket(server, port)
         this.outputStreamWriter = OutputStreamWriter(this.socket.getOutputStream())
         this.bwriter = BufferedWriter(this.outputStreamWriter)
@@ -39,10 +39,14 @@ class SocketManager(server: String, port: Int, password: String, function: () ->
     private fun Connect() {
         Thread {
             try {
-                val packetData = PacketDataBuilder(EPacket.ADD_WORKER, PacketData(EPacket.ADD_WORKER).defaultData().data)
-                val packet = PacketBuilder(EPacket.ADD_WORKER, packetData)
 
-                send(packet.buildPacket(), getBufferedWriter())
+                val packet = EPacket.ADD_WORKER
+                val getPacket = PacketUtils.getPacketBuilder(packet, this.username.toByteArray(), this.password.toByteArray()).data
+                val packetData = PacketData(packet).buildPacketData(getPacket).data
+                val packetDataBuilder = PacketDataBuilder(packet, packetData)
+                val packetBuilder = PacketBuilder(packet, packetDataBuilder)
+
+                send(packetBuilder.buildPacket(), getBufferedWriter())
 
                 while(true) {
                     val line = this.breader.readLine()
