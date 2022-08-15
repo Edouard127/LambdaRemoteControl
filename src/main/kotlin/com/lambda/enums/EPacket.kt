@@ -6,6 +6,8 @@ enum class EPacket(val byte: Byte) {
     HEARTBEAT(byte = 0x02),
     LOGIN(byte = 0x03),
     LOGOUT(byte = 0x04),
+    ADD_WORKER(byte = 0x05),
+    REMOVE_WORKER(byte = 0x06),
     GET_WORKERS(byte = 0x07),
     GET_WORKERS_STATUS(byte = 0x08),
     CHAT(byte = 0x09),
