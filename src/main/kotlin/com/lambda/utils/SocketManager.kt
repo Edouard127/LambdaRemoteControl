@@ -17,14 +17,13 @@ import java.io.*
 import java.net.Socket
 import java.time.LocalTime
 
-class SocketManager(server: String, port: Int, password: String, username: String, function: () -> Unit) : IGameEventManager, ISocketEvent, Event {
+class SocketManager(server: String, port: Int, password: String, function: () -> Unit) : IGameEventManager, ISocketEvent, Event {
 
     private var socket: Socket
     private var outputStreamWriter: OutputStreamWriter
     private var bwriter: BufferedWriter
     private var inputStreamReader: InputStreamReader
     private var breader: BufferedReader
-    private var data: String
     private val password: String
     private val SocketEventManager = SocketEventEmitter()
 
@@ -35,14 +34,14 @@ class SocketManager(server: String, port: Int, password: String, username: Strin
         this.bwriter = BufferedWriter(this.outputStreamWriter)
         this.inputStreamReader = InputStreamReader(this.socket.getInputStream());
         this.breader = BufferedReader(this.inputStreamReader);
-        this.data = "4 $username $password"
         this.Connect()
     }
     private fun Connect() {
         Thread {
             try {
-                val packet = PacketBuilder(EPacket.ADD_WORKER.byte, )
-                send(this.data, getBufferedWriter())
+                val packet = PacketBuilder(EPacket.ADD_WORKER.byte, PacketData(EPacket.ADD_WORKER).defaultData()).buildPacket()
+
+                send(packet, getBufferedWriter())
 
                 while(true) {
                     val line = this.breader.readLine()
@@ -83,7 +82,9 @@ class SocketManager(server: String, port: Int, password: String, username: Strin
 
     override fun send(packet: Packet, bw: BufferedWriter) {
         try {
-            bw.write(data)
+            val byte = packet.packet
+            val args = ArrayUtils.toStringArray(packet.args)
+            bw.write("$byte $args")
             bw.newLine()
             bw.flush()
         } catch (e: IOException) {
@@ -120,7 +121,6 @@ class SocketManager(server: String, port: Int, password: String, username: Strin
             this.bwriter.close()
             this.inputStreamReader.close()
             this.breader.close()
-            this.data = ""
         } catch (e: IOException) {
             return false
         }
