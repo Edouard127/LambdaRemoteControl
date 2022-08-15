@@ -1,10 +1,15 @@
 package com.lambda.utils
 
+import com.lambda.enums.EPacket
 import com.lambda.interfaces.IPacketBuilder
 
-class PacketBuilder(val byte: Byte, val data: ByteArray) : IPacketBuilder {
+class PacketBuilder(val packet: EPacket, val data: PacketDataBuilder) : IPacketBuilder {
     override fun buildPacket(): Packet {
-        return Packet(byte, data)
+        return Packet(packet.byte, PacketDataBuilder(packet, data.data).writeData())
+    }
+
+    override fun getString(): String {
+        return data.data.map { it.toString() }.joinToString(", ")
     }
 
 }

@@ -9,21 +9,30 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 class PacketData(val packet: EPacket) : IPacketData {
-    override fun defaultData(): ByteArray {
-        return when(this.packet) {
-            EPacket.EXIT -> byteArrayOf(0x00)
-            EPacket.OK -> byteArrayOf(0x00)
-            EPacket.HEARTBEAT -> defaultHeartbeat
-            EPacket.LOGIN -> defaultLogin
-            EPacket.LOGOUT -> defaultLogout
-            EPacket.ADD_WORKER -> getWorker()
-            EPacket.REMOVE_WORKER -> getWorker()
-            EPacket.GET_WORKERS -> defaultGetWorkers
-            EPacket.GET_WORKERS_STATUS -> defaultGetWorkersStatus
-            EPacket.CHAT -> defaultChat
-            EPacket.BARITONE -> defaultBaritone
-            EPacket.LAMBDA -> defaultLambda
-            EPacket.ERROR -> defaultError
+    override fun defaultData(): PacketDataBuilder {
+        return PacketDataBuilder(this.packet, getDefaultPacketData(packet))
+    }
+
+    override fun buildPacketData(packetData: List<ByteArray>): PacketDataBuilder {
+        return PacketDataBuilder(this.packet, packetData)
+    }
+    override fun getDefaultPacketData(packet: EPacket): List<ByteArray> {
+        // TODO: Implement this method
+        return when (packet) {
+            EPacket.EXIT -> listOf(byteArrayOf(0x00))
+            EPacket.OK -> listOf(byteArrayOf(0x00))
+            EPacket.HEARTBEAT -> listOf(byteArrayOf(0x00))
+            EPacket.LOGIN -> listOf(byteArrayOf(0x00))
+            EPacket.LOGOUT -> listOf(byteArrayOf(0x00))
+            EPacket.ADD_WORKER -> listOf(createWorker())
+            EPacket.REMOVE_WORKER -> listOf(createWorker())
+            EPacket.GET_WORKERS -> listOf(byteArrayOf(0x00))
+            EPacket.GET_WORKERS_STATUS -> listOf(byteArrayOf(0x00))
+            EPacket.CHAT -> listOf(byteArrayOf(0x00))
+            EPacket.BARITONE -> listOf(byteArrayOf(0x00))
+            EPacket.LAMBDA -> listOf(byteArrayOf(0x00))
+            EPacket.ERROR -> listOf(byteArrayOf(0x00))
+
         }
     }
 }
@@ -39,11 +48,22 @@ val defaultLambda = "help".encodeToByteArray()
 val defaultError = "Client error".encodeToByteArray()
 
 
-fun getWorker(): ArrayList<ByteArray> {
-    val data = ArrayList<ByteArray>()
-    data.add("Kamigen".encodeToByteArray())
-    data.add(createSignature("Kamigen", "Kamigen"))
-    return data
+
+
+/*fun getWorker(): ByteArray {
+    val worker = RemoteControl.getWorker()
+    val workerBytes = ByteArray(worker.size)
+    for (i in 0 until worker.size) {
+        workerBytes[i] = worker[i].toByte()
+    }
+    return workerBytes
+}*/
+fun createWorker(worker: String = "Kamigen"): ByteArray {
+    val workerBytes = ByteArray(worker.length)
+    for (i in worker.indices) {
+        workerBytes[i] = worker[i].code.toByte()
+    }
+    return workerBytes
 }
 fun createSignature(data: String, key: String): ByteArray {
     val sha256Hmac = Mac.getInstance("HmacSHA256")
