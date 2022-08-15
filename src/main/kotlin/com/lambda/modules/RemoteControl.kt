@@ -25,14 +25,12 @@ internal object RemoteControl : PluginModule(
         PASSWORD_TYPE.RANDOM -> UUID.randomUUID().toString()
         PASSWORD_TYPE.NOTRANDOM -> password
     }
-    val secretKey = s.hashCode().toString()
+    val secretKey = s.encodeToByteArray()
     lateinit var socket: SocketManager
 
     init {
 
         onEnable {
-            mc.player.inventory
-
             val parsedInt = port.toInt()
             socket = SocketManager(server, parsedInt, s) {
                 safeListener<SocketDataReceived> {
