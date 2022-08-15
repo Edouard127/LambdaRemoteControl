@@ -4,7 +4,6 @@ import com.lambda.client.event.SafeClientEvent
 import com.lambda.enums.EWorkerStatus
 import com.lambda.enums.EWorkerType
 import com.lambda.interfaces.IJob
-import com.lambda.interfaces.Worker
 import net.minecraft.util.math.BlockPos
 
 class Job : IJob {
