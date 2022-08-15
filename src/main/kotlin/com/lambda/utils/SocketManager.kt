@@ -4,6 +4,7 @@ import com.lambda.client.event.Event
 import com.lambda.client.event.SafeClientEvent
 import com.lambda.client.gui.mc.LambdaGuiDisconnected
 import com.lambda.client.util.text.MessageSendHelper
+import com.lambda.enums.EPacket
 import com.lambda.interfaces.*
 import net.minecraft.client.gui.GuiMainMenu
 import net.minecraft.client.gui.GuiMultiplayer
@@ -40,6 +41,7 @@ class SocketManager(server: String, port: Int, password: String, username: Strin
     private fun Connect() {
         Thread {
             try {
+                val packet = PacketBuilder(EPacket.ADD_WORKER.byte, )
                 send(this.data, getBufferedWriter())
 
                 while(true) {
@@ -79,7 +81,7 @@ class SocketManager(server: String, port: Int, password: String, username: Strin
     }
 
 
-    override fun send(data: String, bw: BufferedWriter) {
+    override fun send(packet: Packet, bw: BufferedWriter) {
         try {
             bw.write(data)
             bw.newLine()

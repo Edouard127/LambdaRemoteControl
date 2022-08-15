@@ -6,5 +6,5 @@ import java.io.BufferedWriter
 interface ISocketEvent {
     fun receive(packet: Packet)
     fun close(): Boolean
-    fun send(data: String, bw: BufferedWriter)
+    fun send(packet: Packet, bw: BufferedWriter)
 }
