@@ -1,11 +1,23 @@
 package com.lambda.modules
 
 import com.lambda.SocketPlugin
+import com.lambda.client.command.CommandManager
+import com.lambda.client.event.SafeClientEvent
+import com.lambda.client.gui.mc.LambdaGuiDisconnected
 import com.lambda.client.module.Category
 import com.lambda.client.plugin.api.PluginModule
+import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.client.util.threads.safeListener
+import com.lambda.enums.EPacket
 import com.lambda.utils.SocketDataReceived
 import com.lambda.utils.SocketManager
+import net.minecraft.client.gui.GuiMainMenu
+import net.minecraft.client.gui.GuiMultiplayer
+import net.minecraft.client.multiplayer.ServerData
+import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.util.text.TextComponentString
+import net.minecraftforge.fml.client.FMLClientHandler
+import java.time.LocalTime
 import java.util.*
 
 internal object RemoteControl : PluginModule(
@@ -33,21 +45,45 @@ internal object RemoteControl : PluginModule(
         onEnable {
             val parsedInt = port.toInt()
             socket = SocketManager(server, parsedInt, "Kamigen", s) {
-                safeListener<SocketDataReceived> {
+                safeListener<SocketDataReceived> { it ->
+                    val args: Array<String> = it.packet.getPacketListByte().map { String(it) }.toTypedArray()
+                    println(args)
                     // TODO Execute functions
-                    /*when(it.packet.getPacket()) {
-                        EPacket.EXIT -> FlagType.BOTH
-                        EPacket.OK -> FlagType.SERVER
-                        EPacket.HEARTBEAT -> FlagType.SERVER
-                        EPacket.LOGIN -> FlagType.SERVER
-                        EPacket.LOGOUT -> FlagType.SERVER
-                        EPacket.GET_WORKERS -> FlagType.CLIENT
-                        EPacket.GET_WORKERS_STATUS -> FlagType.CLIENT
-                        EPacket.CHAT -> FlagType.NONE
-                        EPacket.BARITONE -> FlagType.NONE
-                        EPacket.LAMBDA -> FlagType.NONE
-                        EPacket.ERROR -> FlagType.BOTH
-                    }*/
+                    when(it.packet.getPacket()) {
+                        EPacket.EXIT -> {}
+                        EPacket.OK -> {}
+                        EPacket.HEARTBEAT -> {
+                            println("Heartbeat")
+                        }
+                        EPacket.LOGIN -> login(ServerData(args[0], args[1], args[3].toBooleanStrict()))
+                        EPacket.LOGOUT -> logout(args.joinToString { it })
+                        EPacket.ADD_WORKER -> {}//addWorker(args.joinToString { it })
+                        EPacket.REMOVE_WORKER -> {}//removeWorker(args.joinToString { it })
+                        EPacket.GET_WORKERS -> {
+                            // TODO
+                        }
+                        EPacket.GET_WORKERS_STATUS -> {
+                            // TODO
+                        }
+                        EPacket.CHAT -> {
+                            val string = StringBuilder()
+                            it.packet.getPacketListByte().forEach { it2 ->
+                                string.append(String(it2)+"\n")
+                            }
+                            MessageSendHelper.sendChatMessage(string.toString())
+                        }
+                        EPacket.BARITONE -> {
+                            // TODO Make command queue
+                            MessageSendHelper.sendBaritoneCommand(*args)
+                        }
+                        EPacket.LAMBDA -> {
+                            CommandManager.runCommand(args.joinToString { it })
+                        }
+                        EPacket.ERROR -> {
+                            // TODO Handle error and send to server
+                            MessageSendHelper.sendChatMessage("Error: ${args[0]}")
+                        }
+                    }
                 }
             }
 
@@ -61,4 +97,28 @@ internal object RemoteControl : PluginModule(
         }
     }
 
+}
+private fun SafeClientEvent.login(server: ServerData) {
+    try {
+        FMLClientHandler.instance().connectToServer(mc.currentScreen, server);
+    } catch (e: Exception) {
+        println("Could not login ${e.message}")
+        MessageSendHelper.sendChatMessage("Could not login ${e.message}")
+    }
+}
+private fun SafeClientEvent.logout(reason: String) {
+    try {
+        mc.connection?.networkManager?.closeChannel(TextComponentString(""))
+        mc.loadWorld(null as WorldClient?)
+
+        mc.displayGuiScreen(LambdaGuiDisconnected(arrayOf(reason), getScreen(), true, LocalTime.now()))
+    } catch (e: Exception) {
+        println("Could not logout ${e.message}")
+        MessageSendHelper.sendChatMessage("Could not logout ${e.message}")
+    }
+}
+private fun SafeClientEvent.getScreen() = if (mc.isIntegratedServerRunning) {
+    GuiMainMenu()
+} else {
+    GuiMultiplayer(GuiMainMenu())
 }
