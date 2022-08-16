@@ -32,7 +32,7 @@ internal object RemoteControl : PluginModule(
 
         onEnable {
             val parsedInt = port.toInt()
-            socket = SocketManager(server, parsedInt, s) {
+            socket = SocketManager(server, parsedInt, "Kamigen", s) {
                 safeListener<SocketDataReceived> {
                     // TODO Execute functions
                     /*when(it.packet.getPacket()) {

@@ -40,11 +40,9 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
         Thread {
             try {
 
-                val packet = EPacket.ADD_WORKER
-                val getPacket = PacketUtils.getPacketBuilder(packet, this.username.toByteArray(), this.password.toByteArray()).data
-                val packetData = PacketData(packet).buildPacketData(getPacket).data
-                val packetDataBuilder = PacketDataBuilder(packet, packetData)
-                val packetBuilder = PacketBuilder(packet, packetDataBuilder)
+                val epacket = EPacket.ADD_WORKER
+                val getPacket = PacketUtils.getPacketBuilder(epacket, this.username.toByteArray(), this.password.toByteArray())
+                val packetBuilder = PacketBuilder(epacket, getPacket)
 
                 send(packetBuilder.buildPacket(), getBufferedWriter())
 
@@ -55,8 +53,8 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
 
                         val packetArgs = PacketBuilder(epacket, PacketDataBuilder(epacket, line.split(" ").drop(1).map { it.toByteArray() }.toList()))
 
-                        val packetBuilder = Packet(epacket.byte, packetArgs.data.writeData())
-                        this.receive(packetBuilder)
+                        val packet = Packet(epacket.byte, packetArgs.data.writeData())
+                        this.receive(packet)
                     }
                 }
             } catch (e: Exception) {
@@ -89,7 +87,7 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
     override fun send(packet: Packet, bw: BufferedWriter) {
         try {
             val epacket = packet.getPacket()
-            val packetData = PacketDataBuilder(epacket, PacketData(epacket).buildPacketData(packet.getPacketListByte()).data)
+            val packetData = PacketDataBuilder(epacket, packet.getPacketListByte())
 
             val args = PacketBuilder(epacket, packetData)
 
