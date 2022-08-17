@@ -48,7 +48,7 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
                 send(packetBuilder.buildPacket(), getBufferedWriter())
                 while(true) {
                     val line = this.breader.readLine()
-                    if (line != null) {
+                    if (line != null && line.isNotEmpty()) {
                         val body = line.encodeToByteArray()
 
                         val packet = PacketUtils.getPacket(body)
