@@ -7,6 +7,7 @@ import com.lambda.client.gui.mc.LambdaGuiDisconnected
 import com.lambda.client.module.Category
 import com.lambda.client.plugin.api.PluginModule
 import com.lambda.client.util.text.MessageSendHelper
+import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
 import com.lambda.client.util.threads.safeListener
 import com.lambda.enums.EPacket
 import com.lambda.utils.SocketDataReceived
@@ -55,7 +56,7 @@ internal object RemoteControl : PluginModule(
         }
 
         safeListener<SocketDataReceived> { it ->
-            val args: List<String> = String(it.packet.args).split(" ")
+            val args: List<String> = it.parse()
             println("Emitted")
             println(args)
             // TODO Execute functions
@@ -76,14 +77,14 @@ internal object RemoteControl : PluginModule(
                     // TODO
                 }
                 EPacket.CHAT -> {
-                    MessageSendHelper.sendChatMessage(String(it.packet.args))
+                    MessageSendHelper.sendServerMessage(args.joinToString(" "))
                 }
                 EPacket.BARITONE -> {
                     // TODO Make command queue
                     MessageSendHelper.sendBaritoneCommand(*args.toTypedArray())
                 }
                 EPacket.LAMBDA -> {
-                    CommandManager.runCommand(args.joinToString { it })
+                    CommandManager.runCommand(args.joinToString(" "))
                 }
                 EPacket.ERROR -> {
                     // TODO Handle error and send to server
