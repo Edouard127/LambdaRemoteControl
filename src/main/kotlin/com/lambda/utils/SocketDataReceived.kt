@@ -1,6 +1,7 @@
 package com.lambda.utils
 
 import com.lambda.client.event.Cancellable
+import com.lambda.client.event.ClientEvent
 import com.lambda.client.event.Event
 import com.lambda.enums.EFlagType
 

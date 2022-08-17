@@ -18,7 +18,7 @@ import java.io.*
 import java.net.Socket
 import java.time.LocalTime
 
-class SocketManager(server: String, port: Int, username: String, password: String, function: () -> Unit) : IGameEventManager, ISocketEvent, Event {
+class SocketManager(server: String, port: Int, username: String, password: String) : IGameEventManager, ISocketEvent, Event {
 
     private var socket: Socket
     private var outputStreamWriter: OutputStreamWriter
@@ -49,8 +49,9 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
                 while(true) {
                     val line = this.breader.readLine()
                     if (line != null) {
-                        println(line)
-                        val packet = PacketUtils.getPacket(line.split(" "))
+                        val body = line.encodeToByteArray()
+
+                        val packet = PacketUtils.getPacket(body)
                         this.receive(packet)
                     }
                 }

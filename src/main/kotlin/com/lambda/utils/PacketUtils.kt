@@ -21,6 +21,7 @@ object PacketUtils {
         ois.close()
         return packet
     }
+    fun Byte.intify(): Byte = (this - 0x30).toByte()
     fun getPacketId(data: Byte): EPacket {
         return EPacket.values()[data.toInt()]
     }
@@ -28,10 +29,12 @@ object PacketUtils {
         /* TODO: add support for multiple data types */
         return PacketDataBuilder(type, arrByteArrayToByteArray(data as Array<ByteArray>))
     }
-    fun getPacket(data: List<String>): Packet {
-        val type = getPacketId(data[0].toByte())
-        // Get the data from the index 1 onwards to a bytearray
-        val d = arrByteArrayToByteArray(data.subList(1, data.size).map { it.toByteArray() }.toTypedArray())
+    fun getPacket(data: ByteArray): Packet {
+        println("Packet Size: ${data.size}")
+
+        val type = getPacketId(data[0].intify())
+
+        val d = data.sliceArray(1 until data.size)
         return Packet(type.byte, d)
     }
     fun arrByteArrayToByteArray(arr: Array<ByteArray>): ByteArray {
