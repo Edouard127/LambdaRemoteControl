@@ -4,29 +4,23 @@ import com.lambda.enums.EFlagType
 import com.lambda.enums.EPacket
 import com.lambda.interfaces.IPacket
 
-class Packet(val byte: Byte, val args: Map<Map<Int, Int>, ByteArray>) : IPacket {
+class Packet(val byte: Int, val args: ByteArray) : IPacket {
     override fun getPacket(): EPacket {
         return mapOf(
-            (0x00).toByte() to EPacket.EXIT,
-            (0x01).toByte() to EPacket.OK,
-            (0x02).toByte() to EPacket.HEARTBEAT,
-            (0x03).toByte() to EPacket.LOGIN,
-            (0x04).toByte() to EPacket.LOGOUT,
-            (0x07).toByte() to EPacket.GET_WORKERS,
-            (0x08).toByte() to EPacket.GET_WORKERS_STATUS,
-            (0x09).toByte() to EPacket.CHAT,
-            (0x0A).toByte() to EPacket.BARITONE,
-            (0x0B).toByte() to EPacket.LAMBDA,
-            (0x0C).toByte() to EPacket.ERROR,
+            0 to EPacket.EXIT,
+            1 to EPacket.OK,
+            2 to EPacket.HEARTBEAT,
+            3 to EPacket.LOGIN,
+            4 to EPacket.LOGOUT,
+            5 to EPacket.ADD_WORKER,
+            6 to EPacket.REMOVE_WORKER,
+            7 to EPacket.GET_WORKERS,
+            8 to EPacket.GET_WORKERS_STATUS,
+            9 to EPacket.CHAT,
+            10 to EPacket.BARITONE,
+            11 to EPacket.LAMBDA,
+            12 to EPacket.ERROR,
         )[byte] ?: EPacket.ERROR
-    }
-
-    override fun getPacketData(): Map<Map<Int, Int>, ByteArray> {
-        return args
-    }
-
-    override fun getPacketListByte(): List<ByteArray> {
-        return args.values.toList()
     }
 
 
@@ -50,7 +44,7 @@ class Packet(val byte: Byte, val args: Map<Map<Int, Int>, ByteArray>) : IPacket 
 
 
     // Return the current byte value of the packet
-    override val packet: Byte
+    override val packet: Int
         get() = getPacket().byte
 }
 

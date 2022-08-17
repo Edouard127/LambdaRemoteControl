@@ -46,7 +46,7 @@ internal object RemoteControl : PluginModule(
             val parsedInt = port.toInt()
             socket = SocketManager(server, parsedInt, "Kamigen", s) {
                 safeListener<SocketDataReceived> { it ->
-                    val args: Array<String> = it.packet.getPacketListByte().map { String(it) }.toTypedArray()
+                    val args: List<String> = String(it.packet.args).split(" ")
                     println(args)
                     // TODO Execute functions
                     when(it.packet.getPacket()) {
@@ -66,15 +66,11 @@ internal object RemoteControl : PluginModule(
                             // TODO
                         }
                         EPacket.CHAT -> {
-                            val string = StringBuilder()
-                            it.packet.getPacketListByte().forEach { it2 ->
-                                string.append(String(it2)+"\n")
-                            }
-                            MessageSendHelper.sendChatMessage(string.toString())
+                            MessageSendHelper.sendChatMessage(String(it.packet.args))
                         }
                         EPacket.BARITONE -> {
                             // TODO Make command queue
-                            MessageSendHelper.sendBaritoneCommand(*args)
+                            MessageSendHelper.sendBaritoneCommand(*args.toTypedArray())
                         }
                         EPacket.LAMBDA -> {
                             CommandManager.runCommand(args.joinToString { it })

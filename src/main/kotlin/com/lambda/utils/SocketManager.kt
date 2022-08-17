@@ -4,6 +4,7 @@ import com.lambda.client.event.Event
 import com.lambda.client.event.SafeClientEvent
 import com.lambda.client.gui.mc.LambdaGuiDisconnected
 import com.lambda.client.util.text.MessageSendHelper
+import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
 import com.lambda.enums.EPacket
 import com.lambda.interfaces.*
 import net.minecraft.client.gui.GuiMainMenu
@@ -45,15 +46,11 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
                 val packetBuilder = PacketBuilder(epacket, getPacket)
 
                 send(packetBuilder.buildPacket(), getBufferedWriter())
-
                 while(true) {
                     val line = this.breader.readLine()
                     if (line != null) {
-                        val epacket = PacketUtils.getPacketId(line.split(" ")[0].toByte())
-
-                        val packetArgs = PacketBuilder(epacket, PacketDataBuilder(epacket, line.split(" ").drop(1).map { it.toByteArray() }.toList()))
-
-                        val packet = Packet(epacket.byte, packetArgs.data.writeData())
+                        println(line)
+                        val packet = PacketUtils.getPacket(line.split(" "))
                         this.receive(packet)
                     }
                 }
@@ -87,7 +84,7 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
     override fun send(packet: Packet, bw: BufferedWriter) {
         try {
             val epacket = packet.getPacket()
-            val packetData = PacketDataBuilder(epacket, packet.getPacketListByte())
+            val packetData = PacketDataBuilder(epacket, packet.args)
 
             val args = PacketBuilder(epacket, packetData)
 
