@@ -2,16 +2,19 @@ package com.lambda.modules
 
 import com.lambda.SocketPlugin
 import com.lambda.client.command.CommandManager
+import com.lambda.client.commons.utils.MathUtils
 import com.lambda.client.event.SafeClientEvent
+import com.lambda.client.event.events.BaritoneCommandEvent
+import com.lambda.client.event.events.PlayerTravelEvent
 import com.lambda.client.gui.mc.LambdaGuiDisconnected
 import com.lambda.client.module.Category
 import com.lambda.client.plugin.api.PluginModule
+import com.lambda.client.util.items.originalName
 import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
 import com.lambda.client.util.threads.safeListener
 import com.lambda.enums.EPacket
-import com.lambda.utils.SocketDataReceived
-import com.lambda.utils.SocketManager
+import com.lambda.utils.*
 import net.minecraft.client.gui.GuiMainMenu
 import net.minecraft.client.gui.GuiMultiplayer
 import net.minecraft.client.multiplayer.ServerData
@@ -45,7 +48,7 @@ internal object RemoteControl : PluginModule(
 
         onEnable {
             val parsedInt = port.toInt()
-            SocketManager(server, parsedInt, "Kamigen", s)
+            socket = SocketManager(server, parsedInt, "Kamigen", s)
         }
         onDisable {
             try {
@@ -57,7 +60,6 @@ internal object RemoteControl : PluginModule(
 
         safeListener<SocketDataReceived> { it ->
             val args: List<String> = it.parse()
-            println("Emitted")
             println(args)
             // TODO Execute functions
             when(it.packet.getPacket()) {
@@ -71,7 +73,10 @@ internal object RemoteControl : PluginModule(
                 EPacket.ADD_WORKER -> {}//addWorker(args.joinToString { it })
                 EPacket.REMOVE_WORKER -> {}//removeWorker(args.joinToString { it })
                 EPacket.GET_WORKERS -> {
-                    // TODO
+                    val epacket = EPacket.GET_WORKERS
+                    val getPacket = PacketUtils.getPacketBuilder(epacket, playerInformations().encodeToByteArray())
+                    val packetBuilder = PacketBuilder(epacket, getPacket)
+                    socket.send(packetBuilder.buildPacket(), socket.getBufferedWriter())
                 }
                 EPacket.GET_WORKERS_STATUS -> {
                     // TODO
@@ -91,6 +96,11 @@ internal object RemoteControl : PluginModule(
                     MessageSendHelper.sendChatMessage("Error: ${args[0]}")
                 }
             }
+        }
+        safeListener<PlayerTravelEvent> {
+            val logger = WorkerLogger()
+            logger.addPosition(player.position)
+            logger.saveMemory()
         }
     }
 
@@ -118,4 +128,27 @@ private fun SafeClientEvent.getScreen() = if (mc.isIntegratedServerRunning) {
     GuiMainMenu()
 } else {
     GuiMultiplayer(GuiMainMenu())
+}
+fun SafeClientEvent.playerInformations(): String {
+    val s = StringBuilder()
+    s.append("Player: ${player.name}\n")
+    s.append("Health: ${player.health}\n")
+    s.append("Food: ${player.foodStats.foodLevel}\n")
+    s.append("Players in render: ${mc.world.playerEntities.size}\n")
+    s.append("Coordinates: ${player.position}\n")
+    s.append("Main hand: ${player.heldItemMainhand.originalName}\n")
+    s.append("Off hand: ${player.heldItemOffhand.originalName}\n")
+    s.append(armorInformations())
+    return s.toString()
+}
+fun SafeClientEvent.armorInformations(): String {
+    val s = StringBuilder()
+    s.append("Armor: \n")
+    for ((index, itemStack) in player.armorInventoryList.reversed().withIndex()) {
+        val dura = itemStack.maxDamage - itemStack.itemDamage
+        val duraMultiplier = dura / itemStack.maxDamage.toFloat()
+        val duraPercent = MathUtils.round(duraMultiplier * 100.0f, 1).toFloat()
+        s.append("${itemStack.originalName}: $duraPercent%\n")
+    }
+    return s.toString()
 }

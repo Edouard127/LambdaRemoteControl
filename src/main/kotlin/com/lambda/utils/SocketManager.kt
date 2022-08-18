@@ -85,11 +85,12 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
     override fun send(packet: Packet, bw: BufferedWriter) {
         try {
             val epacket = packet.getPacket()
+            val flags = packet.getFlags()
             val packetData = PacketDataBuilder(epacket, packet.args)
 
             val args = PacketBuilder(epacket, packetData)
 
-            bw.write("${args.packet.byte} ${args.getString()}")
+            bw.write("${args.packet.byte} ${flags.byte} ${args.getString()}")
             bw.newLine()
             bw.flush()
         } catch (e: IOException) {
