@@ -12,6 +12,7 @@ import com.lambda.client.plugin.api.PluginModule
 import com.lambda.client.util.items.originalName
 import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
+import com.lambda.client.util.threads.runSafe
 import com.lambda.client.util.threads.safeListener
 import com.lambda.enums.EPacket
 import com.lambda.utils.*
@@ -47,8 +48,10 @@ internal object RemoteControl : PluginModule(
     init {
 
         onEnable {
-            val parsedInt = port.toInt()
-            socket = SocketManager(server, parsedInt, "Kamigen", s)
+            runSafe {
+                val parsedInt = port.toInt()
+                socket = SocketManager(server, parsedInt, player.name, s)
+            }
         }
         onDisable {
             try {
