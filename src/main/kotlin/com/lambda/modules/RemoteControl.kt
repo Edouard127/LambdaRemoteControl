@@ -62,6 +62,8 @@ internal object RemoteControl : PluginModule(
             val args: List<String> = it.parse()
             println(args)
             // TODO Execute functions
+            println(it.packet.getPacket())
+            println(it.packet.byte)
             when(it.packet.getPacket()) {
                 EPacket.EXIT -> {}
                 EPacket.OK -> {}
@@ -88,6 +90,7 @@ internal object RemoteControl : PluginModule(
                 }
                 EPacket.BARITONE -> {
                     // TODO Make command queue
+                    println("Baritone command")
                     MessageSendHelper.sendBaritoneCommand(*args.toTypedArray())
                 }
                 EPacket.LAMBDA -> {

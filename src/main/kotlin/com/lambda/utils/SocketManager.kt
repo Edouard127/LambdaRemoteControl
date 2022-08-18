@@ -49,10 +49,11 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
                 while(true) {
                     val line = this.breader.readLine()
                     if (line != null && line.isNotEmpty()) {
-                        val body = line.encodeToByteArray()
-                        println(body)
+                        val line = line.split(" ")
+                        val byte = line[0].toByte()
+                        val body = line.joinToString(" ").encodeToByteArray()
 
-                        val packet = PacketUtils.getPacket(body)
+                        val packet = PacketUtils.getPacket(byte, body)
                         this.receive(packet)
                     }
                 }

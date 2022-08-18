@@ -29,13 +29,13 @@ object PacketUtils {
         /* TODO: add support for multiple data types */
         return PacketDataBuilder(type, arrByteArrayToByteArray(data as Array<ByteArray>))
     }
-    fun getPacket(data: ByteArray): Packet {
+    fun getPacket(byte: Byte, data: ByteArray): Packet {
         println("Packet Size: ${data.size}")
+        println("Packet Type: ${getPacketId(byte)}")
 
-        val type = getPacketId(data[0].intify())
+        val type = getPacketId(byte)
 
-        val d = data.sliceArray(1 until data.size)
-        return Packet(type.byte, d)
+        return Packet(type.byte, data)
     }
     fun arrByteArrayToByteArray(arr: Array<ByteArray>): ByteArray {
         val baos = ByteArrayOutputStream()
