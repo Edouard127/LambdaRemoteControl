@@ -73,10 +73,12 @@ internal object RemoteControl : PluginModule(
                 EPacket.ADD_WORKER -> {}//addWorker(args.joinToString { it })
                 EPacket.REMOVE_WORKER -> {}//removeWorker(args.joinToString { it })
                 EPacket.GET_WORKERS -> {
-                    val epacket = EPacket.GET_WORKERS
+                    println("Get workers")
+                    val epacket = it.packet.getPacket()
                     val getPacket = PacketUtils.getPacketBuilder(epacket, playerInformations().encodeToByteArray())
-                    val packetBuilder = PacketBuilder(epacket, getPacket)
-                    socket.send(packetBuilder.buildPacket(), socket.getBufferedWriter())
+                    it.socket.write("${epacket.byte} ${getPacket.data}")
+                    it.socket.newLine()
+                    it.socket.flush()
                 }
                 EPacket.GET_WORKERS_STATUS -> {
                     // TODO

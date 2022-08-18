@@ -50,6 +50,7 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
                     val line = this.breader.readLine()
                     if (line != null && line.isNotEmpty()) {
                         val body = line.encodeToByteArray()
+                        println(body)
 
                         val packet = PacketUtils.getPacket(body)
                         this.receive(packet)
@@ -78,19 +79,20 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
     }
 
     override fun receive(packet: Packet) {
-        this.SocketEventManager.emit(packet, packet.getFlags())
+        this.SocketEventManager.emit(packet, packet.getFlags(), getBufferedWriter())
     }
 
 
     override fun send(packet: Packet, bw: BufferedWriter) {
         try {
+            println(packet.toString())
             val epacket = packet.getPacket()
             val flags = packet.getFlags()
             val packetData = PacketDataBuilder(epacket, packet.args)
 
             val args = PacketBuilder(epacket, packetData)
 
-            bw.write("${args.packet.byte} ${flags.byte} ${args.getString()}")
+            bw.write("${args.packet.byte} ${args.getString()}")
             bw.newLine()
             bw.flush()
         } catch (e: IOException) {

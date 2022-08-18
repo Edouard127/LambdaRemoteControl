@@ -7,7 +7,7 @@ import net.minecraft.util.math.BlockPos
 
 
 class WorkerLogger {
-    private lateinit var lastPositions: Array<BlockPos>
+    private var lastPositions: Array<BlockPos> = Array(200) { BlockPos.ORIGIN }
 
     fun getLastPositions(): Array<BlockPos> {
         return lastPositions.filter { lastPositions.size < 200 }.toTypedArray()
