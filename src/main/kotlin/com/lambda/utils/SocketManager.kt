@@ -4,7 +4,6 @@ import com.lambda.client.event.Event
 import com.lambda.client.event.SafeClientEvent
 import com.lambda.client.gui.mc.LambdaGuiDisconnected
 import com.lambda.client.util.text.MessageSendHelper
-import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
 import com.lambda.enums.EPacket
 import com.lambda.interfaces.*
 import net.minecraft.client.gui.GuiMainMenu
@@ -18,7 +17,7 @@ import java.io.*
 import java.net.Socket
 import java.time.LocalTime
 
-class SocketManager(server: String, port: Int, username: String, password: String) : IGameEventManager, ISocketEvent, Event {
+class SocketManager(server: String, port: Int, username: String, password: String) : IGameEventManager, ISocketManager, Event {
 
     private var socket: Socket
     private var outputStreamWriter: OutputStreamWriter
@@ -45,7 +44,7 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
                 val getPacket = PacketUtils.getPacketBuilder(epacket, this.username.toByteArray(), this.password.toByteArray())
                 val packetBuilder = PacketBuilder(epacket, getPacket)
 
-                send(packetBuilder.buildPacket(), getBufferedWriter())
+                send(packetBuilder.buildPacket())
                 while(true) {
                     val line = this.breader.readLine()
                     if (line != null && line.isNotEmpty()) {
@@ -84,15 +83,15 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
     }
 
 
-    override fun send(packet: Packet, bw: BufferedWriter) {
+    override fun send(packet: Packet) {
         try {
-            println(packet.toString())
             val epacket = packet.getPacket()
             val flags = packet.getFlags()
             val packetData = PacketDataBuilder(epacket, packet.args)
 
             val args = PacketBuilder(epacket, packetData)
 
+            val bw = getBufferedWriter()
             bw.write("${args.packet.byte} ${args.getString()}")
             bw.newLine()
             bw.flush()
