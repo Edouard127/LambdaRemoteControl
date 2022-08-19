@@ -35,9 +35,9 @@ class Packet(val byte: Int, val args: ByteArray) : IPacket {
             EPacket.REMOVE_WORKER -> EFlagType.SERVER
             EPacket.GET_WORKERS -> EFlagType.CLIENT
             EPacket.GET_WORKERS_STATUS -> EFlagType.CLIENT
-            EPacket.CHAT -> EFlagType.NONE
-            EPacket.BARITONE -> EFlagType.NONE
-            EPacket.LAMBDA -> EFlagType.NONE
+            EPacket.CHAT -> EFlagType.CLIENT
+            EPacket.BARITONE -> EFlagType.CLIENT
+            EPacket.LAMBDA -> EFlagType.CLIENT
             EPacket.ERROR -> EFlagType.BOTH
         }
     }

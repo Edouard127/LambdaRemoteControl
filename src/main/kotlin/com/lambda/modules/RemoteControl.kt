@@ -80,8 +80,8 @@ internal object RemoteControl : PluginModule(
                 EPacket.GET_WORKERS -> {
                     println("Get workers")
                     val epacket = it.packet.getPacket()
-                    val getPacket = PacketUtils.getPacketBuilder(epacket, playerInformations().encodeToByteArray())
-                    it.socket.write("${epacket.byte} ${getPacket.data}")
+                    val packet = Packet(epacket.byte, playerInformations().encodeToByteArray())
+                    it.socket.write("${packet.getPacket().byte} ${packet.getFlags().byte} ${playerInformations()}")
                     it.socket.newLine()
                     it.socket.flush()
                 }
@@ -139,24 +139,24 @@ private fun SafeClientEvent.getScreen() = if (mc.isIntegratedServerRunning) {
 }
 fun SafeClientEvent.playerInformations(): String {
     val s = StringBuilder()
-    s.append("Player: ${player.name}\n")
-    s.append("Health: ${player.health}\n")
-    s.append("Food: ${player.foodStats.foodLevel}\n")
-    s.append("Players in render: ${mc.world.playerEntities.size}\n")
-    s.append("Coordinates: ${player.position}\n")
-    s.append("Main hand: ${player.heldItemMainhand.originalName}\n")
-    s.append("Off hand: ${player.heldItemOffhand.originalName}\n")
+    s.append("Player: ${player.name} ")
+    s.append("Health: ${player.health} ")
+    s.append("Food: ${player.foodStats.foodLevel} ")
+    s.append("Players in render: ${mc.world.playerEntities.size} ")
+    s.append("Coordinates: ${player.position} ")
+    s.append("Main hand: ${player.heldItemMainhand.originalName} ")
+    s.append("Off hand: ${player.heldItemOffhand.originalName} ")
     s.append(armorInformations())
     return s.toString()
 }
 fun SafeClientEvent.armorInformations(): String {
     val s = StringBuilder()
-    s.append("Armor: \n")
-    for ((index, itemStack) in player.armorInventoryList.reversed().withIndex()) {
+    s.append("Armor: ")
+    for (itemStack in player.armorInventoryList.reversed()) {
         val dura = itemStack.maxDamage - itemStack.itemDamage
         val duraMultiplier = dura / itemStack.maxDamage.toFloat()
         val duraPercent = MathUtils.round(duraMultiplier * 100.0f, 1).toFloat()
-        s.append("${itemStack.originalName}: $duraPercent%\n")
+        s.append("${itemStack.originalName}: $duraPercent% ")
     }
     return s.toString()
 }
