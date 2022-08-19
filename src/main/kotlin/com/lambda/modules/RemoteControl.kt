@@ -74,7 +74,7 @@ internal object RemoteControl : PluginModule(
                     println("Heartbeat")
                 }
                 EPacket.LOGIN -> login(ServerData(args[0], args[1], args[3].toBooleanStrict()))
-                EPacket.LOGOUT -> logout(args.joinToString { it })
+                EPacket.LOGOUT -> logout(args.joinToString(" "))
                 EPacket.ADD_WORKER -> {}//addWorker(args.joinToString { it })
                 EPacket.REMOVE_WORKER -> {}//removeWorker(args.joinToString { it })
                 EPacket.GET_WORKERS -> {
