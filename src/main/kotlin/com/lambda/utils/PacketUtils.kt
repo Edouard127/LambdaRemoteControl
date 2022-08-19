@@ -1,5 +1,6 @@
 package com.lambda.utils
 
+import com.lambda.enums.EFlagType
 import com.lambda.enums.EPacket
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -25,7 +26,7 @@ object PacketUtils {
     fun getPacketId(data: Byte): EPacket {
         return EPacket.values()[data.toInt()]
     }
-    fun getPacketBuilder(type: EPacket, vararg data: ByteArray): PacketDataBuilder {
+    fun getPacketBuilder(type: EPacket, flag: EFlagType, vararg data: ByteArray): PacketDataBuilder {
         /* TODO: add support for multiple data types */
         return PacketDataBuilder(type, arrByteArrayToByteArray(data as Array<ByteArray>))
     }

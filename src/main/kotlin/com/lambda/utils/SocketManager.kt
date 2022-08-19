@@ -4,6 +4,7 @@ import com.lambda.client.event.Event
 import com.lambda.client.event.SafeClientEvent
 import com.lambda.client.gui.mc.LambdaGuiDisconnected
 import com.lambda.client.util.text.MessageSendHelper
+import com.lambda.enums.EFlagType
 import com.lambda.enums.EPacket
 import com.lambda.interfaces.*
 import net.minecraft.client.gui.GuiMainMenu
@@ -41,16 +42,17 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
             try {
 
                 val epacket = EPacket.ADD_WORKER
-                val getPacket = PacketUtils.getPacketBuilder(epacket, this.username.toByteArray(), this.password.toByteArray())
+                val getPacket = PacketUtils.getPacketBuilder(epacket, EFlagType.CLIENT, this.username.toByteArray(), this.password.toByteArray())
                 val packetBuilder = PacketBuilder(epacket, getPacket)
 
                 send(packetBuilder.buildPacket())
                 while(true) {
                     val line = this.breader.readLine()
                     if (line != null && line.isNotEmpty()) {
-                        val line = line.split(" ")
-                        val byte = line[0].toByte()
-                        val body = line.joinToString(" ").encodeToByteArray()
+                        val input = line.split(" ")
+                        val byte = input[0].toByte()
+
+                        val body = input.subList(2, input.size).joinToString(" ").encodeToByteArray()
 
                         val packet = PacketUtils.getPacket(byte, body)
                         this.receive(packet)
@@ -86,13 +88,13 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
     override fun send(packet: Packet) {
         try {
             val epacket = packet.getPacket()
-            val flags = packet.getFlags()
+            val flag = packet.getFlags()
             val packetData = PacketDataBuilder(epacket, packet.args)
 
             val args = PacketBuilder(epacket, packetData)
 
             val bw = getBufferedWriter()
-            bw.write("${args.packet.byte} ${args.getString()}")
+            bw.write("${args.packet.byte} ${flag.byte} ${args.getString()}")
             bw.newLine()
             bw.flush()
         } catch (e: IOException) {

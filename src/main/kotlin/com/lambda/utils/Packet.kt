@@ -42,6 +42,10 @@ class Packet(val byte: Int, val args: ByteArray) : IPacket {
         }
     }
 
+    override fun getData(): ByteArray {
+        return args
+    }
+
 
     // Return the current byte value of the packet
     override val packet: Int

@@ -1,7 +1,9 @@
 package com.lambda.utils
 
+import baritone.api.utils.Helper.mc
 import com.lambda.client.commons.utils.MathUtils
 import com.lambda.client.event.SafeClientEvent
+import com.lambda.client.util.Wrapper.player
 import com.lambda.client.util.items.originalName
 import net.minecraft.util.math.BlockPos
 
@@ -24,28 +26,33 @@ class WorkerLogger {
     fun getCurrentPosition(): BlockPos {
         return lastPositions.last()
     }
-    fun SafeClientEvent.playerInformations(): String {
+    fun playerInformations(): String {
         val s = StringBuilder()
-        s.append("Player: ${player.name}\n")
-        s.append("Health: ${player.health}\n")
-        s.append("Food: ${player.foodStats.foodLevel}\n")
-        s.append("Players in render: ${mc.world.playerEntities.size}\n")
-        s.append("Coordinates: ${player.position}\n")
-        s.append("Main hand: ${player.heldItemMainhand.originalName}\n")
-        s.append("Off hand: ${player.heldItemOffhand.originalName}\n")
+        s.append("Player:${mc.player.name.joinToString()} ")
+        s.append("Health:${mc.player.health} ")
+        s.append("Food:${mc.player.foodStats.foodLevel} ")
+        s.append("PlayersRender:${mc.world.playerEntities.size} ")
+        s.append("Coordinates:${getCurrentPosition()} ")
+        s.append("MainHand:${mc.player.heldItemMainhand.originalName.joinToString()} ")
+        s.append("OffHand:${mc.player.heldItemOffhand.originalName.joinToString()} ")
+        s.append("Working:${isWorking()} ")
         s.append(armorInformations())
         return s.toString()
     }
-    fun SafeClientEvent.armorInformations(): String {
+    fun armorInformations(): String {
         val s = StringBuilder()
-        s.append("Armor: \n")
-        for ((index, itemStack) in player.armorInventoryList.reversed().withIndex()) {
+        s.append("Armor:")
+        for (itemStack in mc.player.armorInventoryList.reversed()) {
             val dura = itemStack.maxDamage - itemStack.itemDamage
             val duraMultiplier = dura / itemStack.maxDamage.toFloat()
             val duraPercent = MathUtils.round(duraMultiplier * 100.0f, 1).toFloat()
-            s.append("${itemStack.originalName}: $duraPercent%\n")
+            s.append("${itemStack.originalName.joinToString()}:$duraPercent% ")
         }
         return s.toString()
     }
+}
+
+fun String.joinToString(): String {
+    return this.split(" ").joinToString(" ")
 }
 

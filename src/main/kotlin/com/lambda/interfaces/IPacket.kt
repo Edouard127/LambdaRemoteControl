@@ -7,4 +7,5 @@ interface IPacket {
     val packet: Int
     fun getPacket(): EPacket
     fun getFlags(): EFlagType
+    fun getData(): ByteArray
 }
