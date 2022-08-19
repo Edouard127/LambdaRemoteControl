@@ -1,5 +1,6 @@
 package com.lambda.utils
 
+import baritone.api.BaritoneAPI
 import baritone.api.utils.Helper.mc
 import com.lambda.client.commons.utils.MathUtils
 import com.lambda.client.event.SafeClientEvent
@@ -9,7 +10,7 @@ import net.minecraft.util.math.BlockPos
 
 
 class WorkerLogger {
-    private var lastPositions: Array<BlockPos> = Array(200) { BlockPos.ORIGIN }
+    private var lastPositions: Array<BlockPos> = arrayOf()
 
     fun getLastPositions(): Array<BlockPos> {
         return lastPositions.filter { lastPositions.size < 200 }.toTypedArray()
@@ -32,10 +33,10 @@ class WorkerLogger {
         s.append("Health:${mc.player.health} ")
         s.append("Food:${mc.player.foodStats.foodLevel} ")
         s.append("PlayersRender:${mc.world.playerEntities.size} ")
-        s.append("Coordinates:${getCurrentPosition()} ")
+        s.append("Coordinates:${mc.player.position} ")
         s.append("MainHand:${mc.player.heldItemMainhand.originalName.joinToString()} ")
         s.append("OffHand:${mc.player.heldItemOffhand.originalName.joinToString()} ")
-        s.append("Working:${isWorking()} ")
+        s.append("Working:${BaritoneAPI.getProvider().primaryBaritone.pathingBehavior.isPathing} ")
         s.append(armorInformations())
         return s.toString()
     }
@@ -53,6 +54,6 @@ class WorkerLogger {
 }
 
 fun String.joinToString(): String {
-    return this.split(" ").joinToString(" ")
+    return this.split(" ").joinToString("")
 }
 
