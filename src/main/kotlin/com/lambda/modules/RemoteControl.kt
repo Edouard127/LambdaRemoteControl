@@ -81,7 +81,7 @@ internal object RemoteControl : PluginModule(
                     println("Get workers")
                     val epacket = it.packet.getPacket()
                     val packet = Packet(epacket.byte, WorkerLogger().playerInformations().encodeToByteArray())
-                    it.socket.write("${packet.getPacket().byte} ${packet.getFlags().byte} ${packet.getData()}")
+                    it.socket.write("${packet.getPacket().byte} ${packet.getFlags().byte} ${playerInformations()}")
                     it.socket.newLine()
                     it.socket.flush()
                 }
