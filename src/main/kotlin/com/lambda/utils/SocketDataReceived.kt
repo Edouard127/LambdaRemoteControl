@@ -9,6 +9,6 @@ import java.net.Socket
 
 class SocketDataReceived(val packet: Packet, val flag: EFlagType, val socket: BufferedWriter) : Event, Cancellable() {
     fun parse(): List<String> {
-        return String(packet.args).split(" ").drop(3)
+        return String(packet.args).split(" ").drop(2)
     }
 }
