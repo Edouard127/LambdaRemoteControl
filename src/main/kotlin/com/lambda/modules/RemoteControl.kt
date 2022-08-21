@@ -5,6 +5,7 @@ import com.lambda.client.command.CommandManager
 import com.lambda.client.commons.utils.MathUtils
 import com.lambda.client.event.SafeClientEvent
 import com.lambda.client.event.events.BaritoneCommandEvent
+import com.lambda.client.event.events.PlayerMoveEvent
 import com.lambda.client.event.events.PlayerTravelEvent
 import com.lambda.client.gui.mc.LambdaGuiDisconnected
 import com.lambda.client.module.Category
@@ -14,12 +15,16 @@ import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
 import com.lambda.client.util.threads.runSafe
 import com.lambda.client.util.threads.safeListener
+import com.lambda.enums.EJobEvents
+import com.lambda.enums.EJobEvents.*
 import com.lambda.enums.EPacket
+import com.lambda.enums.EWorkerType
 import com.lambda.utils.*
 import net.minecraft.client.gui.GuiMainMenu
 import net.minecraft.client.gui.GuiMultiplayer
 import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.text.TextComponentString
 import net.minecraftforge.fml.client.FMLClientHandler
 import java.time.LocalTime
@@ -43,6 +48,7 @@ internal object RemoteControl : PluginModule(
         PASSWORD_TYPE.NOTRANDOM -> password
     }
     val secretKey = s.encodeToByteArray()
+    val logger = WorkerLogger()
     lateinit var socket: SocketManager
 
     init {
@@ -61,7 +67,7 @@ internal object RemoteControl : PluginModule(
             }
         }
 
-        safeListener<SocketDataReceived> { it ->
+        safeListener<SocketDataReceived> {
             val args: List<String> = it.parse()
             println(args)
             // TODO Execute functions
@@ -85,7 +91,7 @@ internal object RemoteControl : PluginModule(
                     it.socket.newLine()
                     it.socket.flush()
                 }
-                EPacket.GET_WORKERS_STATUS -> {
+                EPacket.JOB -> {
                     // TODO
                 }
                 EPacket.CHAT -> {
@@ -94,6 +100,10 @@ internal object RemoteControl : PluginModule(
                 EPacket.BARITONE -> {
                     // TODO Make command queue
                     println("Baritone command")
+                    val blockPos = parseBlockPos(args.joinToString(" "))
+                    Job(EWorkerType.BARITONE, blockPos, cancelable = true, player = player)
+                        .store()
+
                     MessageSendHelper.sendBaritoneCommand(*args.toTypedArray())
                 }
                 EPacket.LAMBDA -> {
@@ -105,10 +115,28 @@ internal object RemoteControl : PluginModule(
                 }
             }
         }
-        safeListener<PlayerTravelEvent> {
-            val logger = WorkerLogger()
+        safeListener<PlayerMoveEvent> {
+            JobUtils().checkJobs()
             logger.addPosition(player.position)
             logger.saveMemory()
+        }
+        safeListener<JobEvents> { ev ->
+            println("Job event: ${ev.event.name}")
+            when(ev.event) {
+                JOB_STARTED -> {
+                    val packet = Packet(EPacket.JOB.byte, ev.instance.getJob().encodeToByteArray())
+                    socket.send(packet)
+                }
+                JOB_FAILED -> {
+                }
+
+                JOB_FINISHED -> TODO()
+                JOB_PAUSED -> TODO()
+                JOB_RESUMED -> TODO()
+                JOB_CANCELLED -> TODO()
+                JOB_INITIALIZED -> TODO()
+                JOB_SCHEDULED -> TODO()
+            }
         }
     }
 
@@ -159,4 +187,14 @@ fun SafeClientEvent.armorInformations(): String {
         s.append("${itemStack.originalName}: $duraPercent% ")
     }
     return s.toString()
+}
+
+fun parseBlockPos(s: String): BlockPos {
+    val split = s.split(",").drop(1)
+    if (split.size == 3) {
+        return BlockPos(split[0].toInt(), split[1].toInt(), split[2].toInt())
+    } else if (split.size == 2) {
+        return BlockPos(split[0].toInt(), 0, split[1].toInt())
+    }
+    return BlockPos.ORIGIN
 }

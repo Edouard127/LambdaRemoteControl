@@ -15,7 +15,7 @@ class Packet(val byte: Int, val args: ByteArray) : IPacket {
             5 to EPacket.ADD_WORKER,
             6 to EPacket.REMOVE_WORKER,
             7 to EPacket.GET_WORKERS,
-            8 to EPacket.GET_WORKERS_STATUS,
+            8 to EPacket.JOB,
             9 to EPacket.CHAT,
             10 to EPacket.BARITONE,
             11 to EPacket.LAMBDA,
@@ -34,7 +34,7 @@ class Packet(val byte: Int, val args: ByteArray) : IPacket {
             EPacket.ADD_WORKER -> EFlagType.SERVER
             EPacket.REMOVE_WORKER -> EFlagType.SERVER
             EPacket.GET_WORKERS -> EFlagType.CLIENT
-            EPacket.GET_WORKERS_STATUS -> EFlagType.CLIENT
+            EPacket.JOB -> EFlagType.CLIENT
             EPacket.CHAT -> EFlagType.CLIENT
             EPacket.BARITONE -> EFlagType.CLIENT
             EPacket.LAMBDA -> EFlagType.CLIENT

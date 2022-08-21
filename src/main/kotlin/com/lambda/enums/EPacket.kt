@@ -9,7 +9,7 @@ enum class EPacket(val byte: Int) {
     ADD_WORKER(byte = 5),
     REMOVE_WORKER(byte = 6),
     GET_WORKERS(byte = 7),
-    GET_WORKERS_STATUS(byte = 8),
+    JOB(byte = 8),
     CHAT(byte = 9),
     BARITONE(byte = 10),
     LAMBDA(byte = 11),
