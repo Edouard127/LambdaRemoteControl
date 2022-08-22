@@ -39,6 +39,8 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
             this.breader = BufferedReader(this.inputStreamReader);
             this.Connect()
         } catch (e: Exception) {
+            e.message?.let { Debug.error("Could not initialise the socket connection", it) }
+
             e.printStackTrace()
             RemoteControl.disable()
         }
@@ -58,7 +60,7 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
                         val input = line.split(" ")
                         val byte = input[0].toByte()
 
-                        val body = input.subList(2, input.size).joinToString(" ").encodeToByteArray()
+                        val body = input.subList(2, input.size-1).joinToString(" ").encodeToByteArray()
 
                         val packet = PacketUtils.getPacket(byte, body)
                         this.receive(packet)
@@ -104,6 +106,7 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
             bw.newLine()
             bw.flush()
         } catch (e: IOException) {
+            e.message?.let { Debug.error("Could not send packet", it) }
             e.printStackTrace()
         }
     }
@@ -113,8 +116,8 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
         try {
             FMLClientHandler.instance().connectToServer(mc.currentScreen, server);
         } catch (e: Exception) {
-            println("Could not login ${e.message}")
-            MessageSendHelper.sendChatMessage("Could not login ${e.message}")
+            e.message?.let { Debug.error("Could not log in", it) }
+            e.printStackTrace()
         }
     }
     override fun SafeClientEvent.logout(reason: String) {
@@ -124,8 +127,7 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
 
             mc.displayGuiScreen(LambdaGuiDisconnected(arrayOf(reason), this.getScreen, true, LocalTime.now()))
         } catch (e: Exception) {
-            println("Could not logout ${e.message}")
-            MessageSendHelper.sendChatMessage("Could not logout ${e.message}")
+            e.message?.let { Debug.error("Could not log out", it) }
             e.printStackTrace()
         }
     }

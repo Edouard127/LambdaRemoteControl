@@ -31,8 +31,8 @@ object PacketUtils {
         return PacketDataBuilder(type, arrByteArrayToByteArray(data as Array<ByteArray>))
     }
     fun getPacket(byte: Byte, data: ByteArray): Packet {
-        println("Packet Size: ${data.size}")
-        println("Packet Type: ${getPacketId(byte)}")
+        Debug.blue("Packet Size:", data.size.toString())
+        Debug.blue("Packet Type:", getPacketId(byte).toString())
 
         val type = getPacketId(byte)
 

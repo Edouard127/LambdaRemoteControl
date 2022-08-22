@@ -1,12 +1,12 @@
 package com.lambda.modules
 
+import baritone.command.BaritoneChatControl
+import baritone.utils.BaritoneProcessHelper
 import com.lambda.SocketPlugin
 import com.lambda.client.command.CommandManager
 import com.lambda.client.commons.utils.MathUtils
 import com.lambda.client.event.SafeClientEvent
 import com.lambda.client.event.events.BaritoneCommandEvent
-import com.lambda.client.event.events.PlayerMoveEvent
-import com.lambda.client.event.events.PlayerTravelEvent
 import com.lambda.client.gui.mc.LambdaGuiDisconnected
 import com.lambda.client.module.Category
 import com.lambda.client.plugin.api.PluginModule
@@ -15,7 +15,6 @@ import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
 import com.lambda.client.util.threads.runSafe
 import com.lambda.client.util.threads.safeListener
-import com.lambda.enums.EJobEvents
 import com.lambda.enums.EJobEvents.*
 import com.lambda.enums.EPacket
 import com.lambda.enums.EWorkerType
@@ -27,8 +26,12 @@ import net.minecraft.client.multiplayer.WorldClient
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.text.TextComponentString
 import net.minecraftforge.fml.client.FMLClientHandler
+import net.minecraftforge.fml.common.gameevent.TickEvent
 import java.time.LocalTime
-import java.util.*
+import java.util.UUID
+import com.lambda.client.module.modules.player.Timer
+import com.lambda.client.util.TickTimer
+import com.lambda.enums.EWorkerStatus
 
 internal object RemoteControl : PluginModule(
     name = "Remote Control",
@@ -43,13 +46,16 @@ internal object RemoteControl : PluginModule(
     private val password by setting("Password", "", { passType == PASSWORD_TYPE.NOTRANDOM })
     private val server by setting("Server", "localhost")
     private val port by setting("Port", "1984")
+    val debug by setting("Debug", false)
     val s = when (passType) {
         PASSWORD_TYPE.RANDOM -> UUID.randomUUID().toString()
         PASSWORD_TYPE.NOTRANDOM -> password
     }
     val secretKey = s.encodeToByteArray()
-    val logger = WorkerLogger()
-    lateinit var socket: SocketManager
+    private val logger = WorkerLogger()
+    private lateinit var socket: SocketManager
+    private val jUtils = JobUtils(logger)
+    private val timer = TickTimer()
 
     init {
 
@@ -69,22 +75,18 @@ internal object RemoteControl : PluginModule(
 
         safeListener<SocketDataReceived> {
             val args: List<String> = it.parse()
-            println(args)
-            // TODO Execute functions
-            println(it.packet.getPacket())
-            println(it.packet.byte)
             when(it.packet.getPacket()) {
                 EPacket.EXIT -> {}
                 EPacket.OK -> {}
                 EPacket.HEARTBEAT -> {
-                    println("Heartbeat")
+                    Debug.log("Heartbeat")
                 }
                 EPacket.LOGIN -> login(ServerData(args[0], args[1], args[3].toBooleanStrict()))
                 EPacket.LOGOUT -> logout(args.joinToString(" "))
                 EPacket.ADD_WORKER -> {}//addWorker(args.joinToString { it })
                 EPacket.REMOVE_WORKER -> {}//removeWorker(args.joinToString { it })
                 EPacket.GET_WORKERS -> {
-                    println("Get workers")
+                    Debug.purple("Get workers")
                     val epacket = it.packet.getPacket()
                     val packet = Packet(epacket.byte, WorkerLogger().playerInformations().encodeToByteArray())
                     it.socket.write("${packet.getPacket().byte} ${packet.getFlags().byte} ${WorkerLogger().playerInformations()}")
@@ -98,13 +100,17 @@ internal object RemoteControl : PluginModule(
                     MessageSendHelper.sendServerMessage(args.joinToString(" "))
                 }
                 EPacket.BARITONE -> {
-                    // TODO Make command queue
-                    println("Baritone command")
-                    val blockPos = parseBlockPos(args.joinToString(" "))
-                    Job(EWorkerType.BARITONE, blockPos, cancelable = true, player = player)
-                        .store()
+                    Debug.purple("Baritone command:", args.joinToString(" "))
 
-                    MessageSendHelper.sendBaritoneCommand(*args.toTypedArray())
+                    val blockPos = parseBlockPos(args.joinToString(" "))
+                    jUtils.addJob(Job(
+                        type = EWorkerType.BARITONE,
+                        destination = blockPos,
+                        cancelable = true,
+                        player = player,
+                        jobs = jUtils,
+                        args = args.toTypedArray()
+                    ))
                 }
                 EPacket.LAMBDA -> {
                     CommandManager.runCommand(args.joinToString(" "))
@@ -115,27 +121,38 @@ internal object RemoteControl : PluginModule(
                 }
             }
         }
-        safeListener<PlayerMoveEvent> {
-            JobUtils().checkJobs()
-            logger.addPosition(player.position)
-            logger.saveMemory()
+        safeListener<TickEvent.ClientTickEvent> {
+            if (timer.tick(1000L, resetIfTick = true)) {
+                jUtils.checkJobs()
+                logger.addPosition(player.position)
+                if (logger.shouldSaveMemory()) logger.saveMemory()
+            }
         }
         safeListener<JobEvents> { ev ->
-            println("Job event: ${ev.event.name}")
+            Debug.purple("Job", ev.event.name)
+            // TODO: Job status builder
             when(ev.event) {
                 JOB_STARTED -> {
                     val packet = Packet(EPacket.JOB.byte, ev.instance.getJob().encodeToByteArray())
                     socket.send(packet)
                 }
-                JOB_FAILED -> {
-                }
+                JOB_FAILED -> {}
 
-                JOB_FINISHED -> TODO()
-                JOB_PAUSED -> TODO()
-                JOB_RESUMED -> TODO()
-                JOB_CANCELLED -> TODO()
-                JOB_INITIALIZED -> TODO()
-                JOB_SCHEDULED -> TODO()
+                JOB_FINISHED -> {
+                    val packet = Packet(EPacket.JOB.byte, byteArrayOf(EWorkerStatus.IDLE.byte))
+                    socket.send(packet)
+                }
+                JOB_PAUSED -> {}
+                JOB_RESUMED -> {}
+                JOB_CANCELLED -> {}
+                JOB_SCHEDULED -> {}
+            }
+        }
+        safeListener<BaritoneEvents> {
+            println("Baritone event: $it")
+            jUtils.executeJob(it.job).run {
+                val packet = Packet(EPacket.JOB.byte, it.job.getJob().encodeToByteArray())
+                socket.send(packet)
             }
         }
     }
@@ -145,8 +162,8 @@ private fun SafeClientEvent.login(server: ServerData) {
     try {
         FMLClientHandler.instance().connectToServer(mc.currentScreen, server);
     } catch (e: Exception) {
-        println("Could not login ${e.message}")
-        MessageSendHelper.sendChatMessage("Could not login ${e.message}")
+        e.message?.let { Debug.error("Could not log in", it) }
+        e.printStackTrace()
     }
 }
 private fun SafeClientEvent.logout(reason: String) {
@@ -156,8 +173,8 @@ private fun SafeClientEvent.logout(reason: String) {
 
         mc.displayGuiScreen(LambdaGuiDisconnected(arrayOf(reason), getScreen(), true, LocalTime.now()))
     } catch (e: Exception) {
-        println("Could not logout ${e.message}")
-        MessageSendHelper.sendChatMessage("Could not logout ${e.message}")
+        MessageSendHelper.sendChatMessage("Could not log out ${e.message}")
+        e.printStackTrace()
     }
 }
 private fun SafeClientEvent.getScreen() = if (mc.isIntegratedServerRunning) {
@@ -190,7 +207,8 @@ fun SafeClientEvent.armorInformations(): String {
 }
 
 fun parseBlockPos(s: String): BlockPos {
-    val split = s.split(",").drop(1)
+    val split = s.split(" ").drop(1)
+    println(split.size)
     if (split.size == 3) {
         return BlockPos(split[0].toInt(), split[1].toInt(), split[2].toInt())
     } else if (split.size == 2) {

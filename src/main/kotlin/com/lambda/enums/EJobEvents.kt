@@ -7,6 +7,5 @@ enum class EJobEvents(val byte: Int) {
     JOB_PAUSED(byte = 0x03),
     JOB_RESUMED(byte = 0x04),
     JOB_CANCELLED(byte = 0x05),
-    JOB_INITIALIZED(byte = 0x06),
-    JOB_SCHEDULED(byte = 0x07),
+    JOB_SCHEDULED(byte = 0x06),
 }

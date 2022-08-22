@@ -6,27 +6,38 @@ import com.lambda.client.commons.utils.MathUtils
 import com.lambda.client.event.SafeClientEvent
 import com.lambda.client.util.Wrapper.player
 import com.lambda.client.util.items.originalName
+import com.lambda.client.util.math.VectorUtils.distanceTo
 import net.minecraft.util.math.BlockPos
 
 
 class WorkerLogger {
-    private var lastPositions: Array<BlockPos> = arrayOf()
+    private var lastPositions: Array<BlockPos> = arrayOf(BlockPos.ORIGIN)
 
-    fun getLastPositions(): Array<BlockPos> {
-        return lastPositions.filter { lastPositions.size < 200 }.toTypedArray()
+    fun getLastPositions(n: Int = 200): Array<BlockPos> {
+        return lastPositions.filter { lastPositions.size < n }.toTypedArray()
     }
     fun saveMemory() {
         lastPositions = lastPositions.filter { lastPositions.size < 200 }.toTypedArray()
+    }
+    fun shouldSaveMemory(): Boolean {
+        return lastPositions.size > 200
     }
     fun addPosition(pos: BlockPos) {
         lastPositions += pos
     }
     fun isWorking(): Boolean {
-        return lastPositions.first() != lastPositions.last()
+        var l = false
+        getLastPositions(5).forEach {
+            if (it.distanceTo(lastPositions.last()) < 1) {
+                l = true
+            }
+        }
+        return l
     }
     fun getCurrentPosition(): BlockPos {
-        return lastPositions.last()
+        return lastPositions.lastOrNull() ?: BlockPos.ORIGIN
     }
+    fun getNLast(n: Int) = lastPositions.getOrNull(lastPositions.size-n) ?: BlockPos.ORIGIN
     fun playerInformations(): String {
         val s = StringBuilder()
         s.append("Player:${mc.player.name.joinToString()} ")

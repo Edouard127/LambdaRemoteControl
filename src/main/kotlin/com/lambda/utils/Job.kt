@@ -8,12 +8,22 @@ import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.util.math.BlockPos
 
 // Make a class that implements Worker class
-class Job(val type: EWorkerType, val destination: BlockPos, override val cancelable: Boolean, val player: EntityPlayerSP, private val Jobs: JobUtils = JobUtils(), override val cancelled: Boolean = false) : Worker() {
+class Job
+    (val type: EWorkerType,
+     val destination: BlockPos,
+     override val cancelable: Boolean = true,
+     val player: EntityPlayerSP,
+     private val jobs: JobUtils,
+     override val cancelled: Boolean = false,
+     var isDone: Boolean = false,
+     val args: Array<String>)
+    : Worker() {
 
     override fun store() {
         // Store the job in the job list
-        Jobs.jobs.add(this)
+        jobs.addJob(this)
         this.emitEvent(EJobEvents.JOB_STARTED)
+        Debug.log("Job started")
     }
 
     override fun run() {
@@ -26,8 +36,9 @@ class Job(val type: EWorkerType, val destination: BlockPos, override val cancela
 
     override fun remove() {
         // Remove the job from the job list
-        Jobs.jobs.remove(this)
+        jobs.removeJob(this)
         this.emitEvent(EJobEvents.JOB_CANCELLED)
+        Debug.log("Job cancelled")
     }
 
     override fun cancel() {
