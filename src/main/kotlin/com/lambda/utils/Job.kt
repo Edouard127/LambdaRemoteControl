@@ -10,7 +10,7 @@ import net.minecraft.util.math.BlockPos
 // Make a class that implements Worker class
 class Job
     (val type: EWorkerType,
-     val destination: BlockPos,
+     val goal: BlockPos,
      override val cancelable: Boolean = true,
      val player: EntityPlayerSP,
      private val jobs: JobUtils,
@@ -48,7 +48,6 @@ class Job
     override fun getJob(): String {
         val job = StringBuilder()
         job.append("Job type:${this.type.byte} ")
-        job.append("Destination:${this.destination.x},${this.destination.y},${this.destination.z} ")
         job.append("Cancelable:${this.cancelable} ")
         job.append("Player:${this.player.name} ")
         return job.toString()

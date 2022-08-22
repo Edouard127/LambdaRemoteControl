@@ -54,7 +54,7 @@ internal object RemoteControl : PluginModule(
     val secretKey = s.encodeToByteArray()
     private val logger = WorkerLogger()
     private lateinit var socket: SocketManager
-    private val jUtils = JobUtils(logger)
+    private val jUtils = JobUtils()
     private val timer = TickTimer()
 
     init {
@@ -102,15 +102,17 @@ internal object RemoteControl : PluginModule(
                 EPacket.BARITONE -> {
                     Debug.purple("Baritone command:", args.joinToString(" "))
 
-                    val blockPos = parseBlockPos(args.joinToString(" "))
+                    val goal = parseBlockPos(args.joinToString(" "))
+
                     jUtils.addJob(Job(
                         type = EWorkerType.BARITONE,
-                        destination = blockPos,
+                        goal = goal,
                         cancelable = true,
                         player = player,
                         jobs = jUtils,
                         args = args.toTypedArray()
                     ))
+                    //MessageSendHelper.sendBaritoneCommand(args.joinToString(" "))
                 }
                 EPacket.LAMBDA -> {
                     CommandManager.runCommand(args.joinToString(" "))
@@ -122,8 +124,8 @@ internal object RemoteControl : PluginModule(
             }
         }
         safeListener<TickEvent.ClientTickEvent> {
+            jUtils.checkJobs()
             if (timer.tick(1000L, resetIfTick = true)) {
-                jUtils.checkJobs()
                 logger.addPosition(player.position)
                 if (logger.shouldSaveMemory()) logger.saveMemory()
             }

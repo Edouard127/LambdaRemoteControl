@@ -1,28 +1,34 @@
 package com.lambda.utils
 
+import baritone.Baritone
+import baritone.api.BaritoneAPI
+import baritone.api.pathing.goals.Goal
+import baritone.api.pathing.goals.GoalNear
+import baritone.api.pathing.goals.GoalYLevel
 import com.lambda.client.event.LambdaEventBus
 import com.lambda.client.util.BaritoneUtils
 import com.lambda.client.util.math.VectorUtils.distanceTo
+import com.lambda.client.util.math.VectorUtils.toVec3d
 import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.client.util.threads.defaultScope
 import com.lambda.enums.EJobEvents
 import kotlinx.coroutines.*
 import kotlin.coroutines.Continuation
-import kotlin.math.log
 
-class JobUtils(val logger: WorkerLogger, private val jobs: MutableList<Job> = mutableListOf()) {
-
+class JobUtils(private val jobs: MutableList<Job> = mutableListOf()) {
 
     fun checkJobs() {
-        println("Checking jobs")
-        defaultScope.launch {
-            jobs.firstOrNull()?.let {
-                LambdaEventBus.post(BaritoneEvents(job = it))
-                while (!it.isDone) {
-                    it.isDone = !pathing
-                    if (it.isDone) {
-                        jobs.remove(it)
-                    }
+        if (jobs.isNotEmpty()) {
+            Debug.log("Job(s) found")
+            jobs.first().run {
+                //val process = GoalNear(player.position, 2147483647).goalPos ?: return
+
+                if (player.position.distanceTo(this.goal) < 3) {
+                    this.isDone = true
+                    jobs.remove(this)
+                }
+                if (!BaritoneUtils.isPathing && !BaritoneUtils.isActive) {
+                    if (!this.isDone) LambdaEventBus.post(BaritoneEvents(job = this))
                 }
             }
         }
@@ -32,15 +38,12 @@ class JobUtils(val logger: WorkerLogger, private val jobs: MutableList<Job> = mu
         MessageSendHelper.sendBaritoneCommand(*job.args)
         /* So the job is executed if thisway is used */
         MessageSendHelper.sendBaritoneCommand("path")
-        running = true
     }
     fun addJob(job: Job) {
         jobs.add(job)
-        println(jobs.size)
     }
     fun removeJob(job: Job) {
         jobs.remove(job)
-        running = false
     }
     fun cancelJob(job: Job) {
         job.cancel()
@@ -51,10 +54,4 @@ class JobUtils(val logger: WorkerLogger, private val jobs: MutableList<Job> = mu
     fun cancelAllJobsExcept(job: Job) {
         jobs.forEach { if (it != job) it.cancel() }
     }
-
-    val pathing
-        get() = BaritoneUtils.isPathing && BaritoneUtils.isActive
-    var running = false
-
-    // Make a function to add a job to the list and execute it once the job is finished
 }
