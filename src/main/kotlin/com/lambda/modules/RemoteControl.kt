@@ -121,6 +121,10 @@ internal object RemoteControl : PluginModule(
                     // TODO Handle error and send to server
                     MessageSendHelper.sendChatMessage("Error: ${args[0]}")
                 }
+                EPacket.HIGHWAY_TOOLS -> {
+                    val hwt = HighwayToolsHandler(it.packet.args)
+                    CommandManager.runCommand("set highwayTools ${hwt.getArguments().joinToString(" ")}")
+                }
             }
         }
         safeListener<TickEvent.ClientTickEvent> {

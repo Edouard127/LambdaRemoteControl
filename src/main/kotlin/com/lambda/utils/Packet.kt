@@ -20,6 +20,7 @@ class Packet(val byte: Int, val args: ByteArray) : IPacket {
             10 to EPacket.BARITONE,
             11 to EPacket.LAMBDA,
             12 to EPacket.ERROR,
+            15 to EPacket.HIGHWAY_TOOLS
         )[byte] ?: EPacket.ERROR
     }
 
@@ -39,6 +40,7 @@ class Packet(val byte: Int, val args: ByteArray) : IPacket {
             EPacket.BARITONE -> EFlagType.CLIENT
             EPacket.LAMBDA -> EFlagType.CLIENT
             EPacket.ERROR -> EFlagType.BOTH
+            EPacket.HIGHWAY_TOOLS -> EFlagType.CLIENT
         }
     }
 
