@@ -1,19 +1,10 @@
 package com.lambda.utils
 
-import baritone.Baritone
-import baritone.api.BaritoneAPI
-import baritone.api.pathing.goals.Goal
-import baritone.api.pathing.goals.GoalNear
-import baritone.api.pathing.goals.GoalYLevel
 import com.lambda.client.event.LambdaEventBus
 import com.lambda.client.util.BaritoneUtils
 import com.lambda.client.util.math.VectorUtils.distanceTo
-import com.lambda.client.util.math.VectorUtils.toVec3d
 import com.lambda.client.util.text.MessageSendHelper
-import com.lambda.client.util.threads.defaultScope
 import com.lambda.enums.EJobEvents
-import kotlinx.coroutines.*
-import kotlin.coroutines.Continuation
 
 class JobUtils(private val jobs: MutableList<Job> = mutableListOf()) {
 
