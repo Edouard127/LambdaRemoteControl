@@ -55,7 +55,7 @@ internal object RemoteControl : PluginModule(
     val secretKey = s.encodeToByteArray()
     private val logger = WorkerLogger()
     private lateinit var socket: SocketManager
-    private val jUtils = JobUtils()
+    private val jUtils = JobUtils(logger)
     private val timer = TickTimer()
 
     init {

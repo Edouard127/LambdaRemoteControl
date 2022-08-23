@@ -6,7 +6,7 @@ import com.lambda.client.util.math.VectorUtils.distanceTo
 import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.enums.EJobEvents
 
-class JobUtils(private val jobs: MutableList<Job> = mutableListOf(), val worker: WorkerLogger) {
+class JobUtils(val worker: WorkerLogger, private val jobs: MutableList<Job> = mutableListOf()) {
 
     val isPathing
         get() = BaritoneUtils.isPathing && BaritoneUtils.isActive
