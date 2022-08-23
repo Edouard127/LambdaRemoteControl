@@ -6,11 +6,13 @@ import com.lambda.client.util.math.VectorUtils.distanceTo
 import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.enums.EJobEvents
 
-class JobUtils(private val jobs: MutableList<Job> = mutableListOf()) {
+class JobUtils(private val jobs: MutableList<Job> = mutableListOf(), val worker: WorkerLogger) {
+
+    val isPathing
+        get() = BaritoneUtils.isPathing && BaritoneUtils.isActive
 
     fun checkJobs() {
         if (jobs.isNotEmpty()) {
-            Debug.log("Job(s) found")
             jobs.first().run {
                 //val process = GoalNear(player.position, 2147483647).goalPos ?: return
 
@@ -18,7 +20,12 @@ class JobUtils(private val jobs: MutableList<Job> = mutableListOf()) {
                     this.isDone = true
                     jobs.remove(this)
                 }
-                if (!BaritoneUtils.isPathing && !BaritoneUtils.isActive) {
+                if (!worker.isWorking() && isPathing) {
+                    Debug.error("[${this.player.name}] is pathing but not working")
+                    this.isDone = true
+                    cancelJob(this)
+                }
+                if (!isPathing) {
                     if (!this.isDone) LambdaEventBus.post(BaritoneEvents(job = this))
                 }
             }
@@ -37,7 +44,9 @@ class JobUtils(private val jobs: MutableList<Job> = mutableListOf()) {
         jobs.remove(job)
     }
     fun cancelJob(job: Job) {
-        job.cancel()
+        jobs.remove(job)
+        job.emitEvent(EJobEvents.JOB_CANCELLED)
+        //job.cancel()
     }
     fun cancelAllJobs() {
         jobs.forEach { it.cancel() }
