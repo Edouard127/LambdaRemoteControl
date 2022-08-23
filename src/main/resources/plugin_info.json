@@ -5,5 +5,6 @@
   "url": "https://github.com/Edouard127/LambdaRemoteControl",
   "authors": [ "Kamigen" ],
   "main_class": "com.lambda.SocketPlugin",
-  "min_api_version": "3.2"
+  "min_api_version": "3.2",
+  "required_plugins": ["HighwayTools"]
 }
