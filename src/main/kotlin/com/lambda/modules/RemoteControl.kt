@@ -32,6 +32,7 @@ import java.util.UUID
 import com.lambda.client.module.modules.player.Timer
 import com.lambda.client.util.TickTimer
 import com.lambda.enums.EWorkerStatus
+import net.minecraft.client.Minecraft
 
 internal object RemoteControl : PluginModule(
     name = "Remote Control",
@@ -60,10 +61,8 @@ internal object RemoteControl : PluginModule(
     init {
 
         onEnable {
-            runSafe {
-                val parsedInt = port.toInt()
-                socket = SocketManager(server, parsedInt, player.name, s)
-            }
+            val parsedInt = port.toInt()
+            socket = SocketManager(server, parsedInt, Minecraft.getMinecraft().session.username, s)
         }
         onDisable {
             try {
