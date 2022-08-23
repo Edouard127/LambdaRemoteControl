@@ -40,6 +40,8 @@ class Packet(val byte: Int, val args: ByteArray) : IPacket {
             EPacket.BARITONE -> EFlagType.CLIENT
             EPacket.LAMBDA -> EFlagType.CLIENT
             EPacket.ERROR -> EFlagType.BOTH
+            EPacket.LISTENER_ADD -> EFlagType.SERVER
+            EPacket.LISTENER_REMOVE -> EFlagType.SERVER
             EPacket.HIGHWAY_TOOLS -> EFlagType.CLIENT
         }
     }

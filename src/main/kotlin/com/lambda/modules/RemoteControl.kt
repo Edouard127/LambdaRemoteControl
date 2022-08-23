@@ -83,8 +83,14 @@ internal object RemoteControl : PluginModule(
                 }
                 EPacket.LOGIN -> login(ServerData(args[0], args[1], args[3].toBooleanStrict()))
                 EPacket.LOGOUT -> logout(args.joinToString(" "))
-                EPacket.ADD_WORKER -> {}//addWorker(args.joinToString { it })
-                EPacket.REMOVE_WORKER -> {}//removeWorker(args.joinToString { it })
+                EPacket.ADD_WORKER -> {
+                    //addWorker(args.joinToString { it })
+                    // TODO: Add worker to friendly list
+                }
+                EPacket.REMOVE_WORKER -> {
+                    //removeWorker(args.joinToString { it })
+                    // TODO: Remove worker to friendly list
+                }
                 EPacket.GET_WORKERS -> {
                     Debug.purple("Get workers")
                     val epacket = it.packet.getPacket()
@@ -121,9 +127,11 @@ internal object RemoteControl : PluginModule(
                     // TODO Handle error and send to server
                     MessageSendHelper.sendChatMessage("Error: ${args[0]}")
                 }
+                EPacket.LISTENER_ADD -> {} // input > /dev/null
+                EPacket.LISTENER_REMOVE -> {} // input > /dev/null
                 EPacket.HIGHWAY_TOOLS -> {
-                    val hwt = HighwayToolsHandler(it.packet.args)
-                    CommandManager.runCommand("set highwayTools ${hwt.getArguments().joinToString(" ")}")
+                    val hwt = HighwayToolsHandler(it.parseByteArray())
+                    CommandManager.runCommand("set highwayTools ${hwt.getPacket().string} ${hwt.getArguments().joinToString(" ")}")
                 }
             }
         }

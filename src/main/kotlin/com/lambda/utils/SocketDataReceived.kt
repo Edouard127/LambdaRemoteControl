@@ -11,4 +11,7 @@ class SocketDataReceived(val packet: Packet, val flag: EFlagType, val socket: Bu
     fun parse(): List<String> {
         return String(packet.args).split(" ").drop(2)
     }
+    fun parseByteArray(): ByteArray {
+        return String(packet.args).split(" ").drop(2).joinToString(" ").encodeToByteArray()
+    }
 }

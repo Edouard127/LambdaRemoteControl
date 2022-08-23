@@ -10,8 +10,8 @@ class HighwayToolsHandler(val args: ByteArray) : IHighwayToolsHandler {
         return EHighwayArguments.values()[args[0].toInt()]
     }
     override fun getArguments(): Array<String> {
-        println(String(args.copyOfRange(2, args.size-1)).split(" ").toTypedArray())
-        return String(args.copyOfRange(2, args.size-1)).split(" ").toTypedArray()
+        Debug.blue(String(args.copyOfRange(2, args.size)).split(" ").joinToString(" "))
+        return String(args.copyOfRange(2, args.size)).split(" ").toTypedArray()
     }
 
     override fun createJob(args: Job) {
