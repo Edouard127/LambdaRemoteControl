@@ -195,37 +195,19 @@ private fun SafeClientEvent.getScreen() = if (mc.isIntegratedServerRunning) {
 } else {
     GuiMultiplayer(GuiMainMenu())
 }
-fun SafeClientEvent.playerInformations(): String {
-    val s = StringBuilder()
-    s.append("Player: ${player.name} ")
-    s.append("Health: ${player.health} ")
-    s.append("Food: ${player.foodStats.foodLevel} ")
-    s.append("Players in render: ${mc.world.playerEntities.size} ")
-    s.append("Coordinates: ${player.position} ")
-    s.append("Main hand: ${player.heldItemMainhand.originalName} ")
-    s.append("Off hand: ${player.heldItemOffhand.originalName} ")
-    s.append(armorInformations())
-    return s.toString()
-}
-fun SafeClientEvent.armorInformations(): String {
-    val s = StringBuilder()
-    s.append("Armor: ")
-    for (itemStack in player.armorInventoryList.reversed()) {
-        val dura = itemStack.maxDamage - itemStack.itemDamage
-        val duraMultiplier = dura / itemStack.maxDamage.toFloat()
-        val duraPercent = MathUtils.round(duraMultiplier * 100.0f, 1).toFloat()
-        s.append("${itemStack.originalName}: $duraPercent% ")
-    }
-    return s.toString()
-}
+
 
 fun parseBlockPos(s: String): BlockPos {
     val split = s.split(" ").drop(1)
     println(split.size)
-    if (split.size == 3) {
-        return BlockPos(split[0].toInt(), split[1].toInt(), split[2].toInt())
-    } else if (split.size == 2) {
-        return BlockPos(split[0].toInt(), 0, split[1].toInt())
+    try {
+        if (split.size == 3) {
+            return BlockPos(split[0].toInt(), split[1].toInt(), split[2].toInt())
+        } else if (split.size == 2) {
+            return BlockPos(split[0].toInt(), 0, split[1].toInt())
+        }
+    } catch (e: Exception) {
+        return BlockPos.ORIGIN
     }
     return BlockPos.ORIGIN
 }

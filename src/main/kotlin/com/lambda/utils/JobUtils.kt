@@ -9,14 +9,14 @@ import com.lambda.enums.EJobEvents
 class JobUtils(val worker: WorkerLogger, private val jobs: MutableList<Job> = mutableListOf()) {
 
     val isPathing
-        get() = BaritoneUtils.isPathing && BaritoneUtils.isActive
+        get() = BaritoneUtils.isPathing
 
     fun checkJobs() {
         if (jobs.isNotEmpty()) {
             jobs.first().run {
                 //val process = GoalNear(player.position, 2147483647).goalPos ?: return
 
-                if (player.position.distanceTo(this.goal) < 3) {
+                if (this.player.position.distanceTo(this.goal) <= 1) {
                     this.isDone = true
                     jobs.remove(this)
                 }

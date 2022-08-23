@@ -55,10 +55,11 @@ class WorkerLogger {
         val s = StringBuilder()
         s.append("Armor:")
         for (itemStack in mc.player.armorInventoryList.reversed()) {
+            if (itemStack.isEmpty) continue
             val dura = itemStack.maxDamage - itemStack.itemDamage
             val duraMultiplier = dura / itemStack.maxDamage.toFloat()
             val duraPercent = MathUtils.round(duraMultiplier * 100.0f, 1).toFloat()
-            s.append("${itemStack.originalName.joinToString()}:$duraPercent% ")
+            s.append("${itemStack.originalName}: $duraPercent% ")
         }
         return s.toString()
     }
