@@ -2,15 +2,15 @@ package com.lambda.utils
 
 import com.lambda.enums.EHighwayArguments
 import com.lambda.interfaces.IHighwayToolsHandler
+import com.lambda.utils.PacketUtils.intify
 import java.util.*
 import kotlin.reflect.KTypeParameter
 
 class HighwayToolsHandler(val args: ByteArray) : IHighwayToolsHandler {
     override fun getPacket(): EHighwayArguments {
-        return EHighwayArguments.values()[args[0].toInt()]
+        return EHighwayArguments.values()[args[0].intify().toInt()]
     }
     override fun getArguments(): Array<String> {
-        Debug.blue(String(args.copyOfRange(2, args.size)).split(" ").joinToString(" "))
         return String(args.copyOfRange(2, args.size)).split(" ").toTypedArray()
     }
 

@@ -1,7 +1,7 @@
 package com.lambda.enums
 
-enum class EHighwayArguments(val byte: Int, val n: Int, val string: String) {
-    TOGGLE(byte = 0x00, n = 0, string = "Enable"),
+enum class EHighwayArguments(val byte: Byte, val n: Byte, val string: String) {
+    TOGGLE(byte = 0x00, n = 0, string = "Enabled"),
     MODE(byte = 0x01, n = 1, string = "Mode"),
     WIDTH(byte = 0x02, n = 1, string = "Width"),
     HEIGHT(byte = 0x03, n = 1, string = "Height"),
