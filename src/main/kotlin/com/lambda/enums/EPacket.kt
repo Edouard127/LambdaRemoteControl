@@ -14,4 +14,5 @@ enum class EPacket(val byte: Int) {
     BARITONE(byte = 10),
     LAMBDA(byte = 11),
     ERROR(byte = 12),
+    HIGHWAY_TOOLS(byte = 15),
 }
