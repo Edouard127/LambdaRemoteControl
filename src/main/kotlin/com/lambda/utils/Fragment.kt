@@ -3,13 +3,6 @@ package com.lambda.utils
 
 class Fragment(var fragment: ByteArray, var offset: Int, var length: Int, var hash: Int, var sum: Int) {
 
-    init {
-        if (length > 0) {
-            for (i in offset until offset + length) {
-                sum += fragment[i]
-            }
-        }
-    }
 
     // fun errored(): Boolean = this.equals(fragment)
 

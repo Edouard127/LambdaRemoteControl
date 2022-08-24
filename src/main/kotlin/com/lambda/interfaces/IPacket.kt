@@ -9,4 +9,5 @@ interface IPacket {
     fun getFlags(): EFlagType
     fun getData(): ByteArray
     fun getString(): String
+    fun getPacketLength(): Int
 }

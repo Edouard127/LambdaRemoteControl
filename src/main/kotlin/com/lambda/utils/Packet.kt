@@ -5,10 +5,10 @@ import com.lambda.enums.EPacket
 import com.lambda.interfaces.IPacket
 import kotlin.properties.Delegates
 
-open class Packet(val byte: Int, val length: Int, val args: PacketBuilder) : IPacket {
+open class Packet(val length: Int, val builder: PacketBuilder) : IPacket {
 
     override fun getPacket(): EPacket {
-        return EPacket.values()[byte]
+        return EPacket.values()[builder.packet.byte]
     }
 
     override fun getPacket(i: Int): EPacket {
@@ -39,11 +39,14 @@ open class Packet(val byte: Int, val length: Int, val args: PacketBuilder) : IPa
     }
 
     override fun getData(): ByteArray {
-        return args.data
+        return builder.data
     }
 
+    override fun getPacketLength(): Int {
+        return "$length 1 ${getPacket().byte} ${getFlags().byte}".length
+    }
     override fun getString(): String {
-        return "$length 0 ${getPacket().byte} ${getFlags().byte} ${args.getString()}"
+        return "$length 0 ${getPacket().byte} ${getFlags().byte} ${builder.getString()}"
     }
 }
 

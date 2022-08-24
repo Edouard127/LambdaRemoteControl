@@ -26,8 +26,10 @@ class FragmentedPacket(val packet: Packet, private val fragments: List<Fragment>
     override fun toString(): String {
         return "FragmentedPacket(packet=$packet, fragment=${fragments.joinToString(", ") { it.toString() } })"
     }
-
+    fun getPacketLength(): Int {
+        return "${packet.length} 1 ${packet.getPacket().byte} ${packet.getFlags().byte}".length
+    }
     fun getString(): String {
-        return "${packet.length} 1 ${packet.getPacket().byte} ${packet.getFlags().byte} ${packet.args.getString()}"
+        return "${packet.length} 1 ${packet.getPacket().byte} ${packet.getFlags().byte} ${packet.builder.getString()}"
     }
 }

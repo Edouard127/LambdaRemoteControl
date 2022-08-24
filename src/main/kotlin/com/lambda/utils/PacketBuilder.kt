@@ -5,7 +5,7 @@ import com.lambda.interfaces.IPacketBuilder
 
 class PacketBuilder(val packet: EPacket, val data: ByteArray) : IPacketBuilder {
     override fun buildPacket(): Packet {
-        return Packet(packet.byte, data.size, this)
+        return Packet(data.size, this)
     }
 
     override fun getString(): String {

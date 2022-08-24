@@ -34,7 +34,7 @@ object PacketUtils {
 
         val type = getPacketId(byte)
 
-        return Packet(type.byte, data.size, getPacketBuilder(type, data))
+        return Packet(data.size, getPacketBuilder(type, data))
     }
     fun arrByteArrayToByteArray(arr: Array<ByteArray>): ByteArray {
         val baos = ByteArrayOutputStream()

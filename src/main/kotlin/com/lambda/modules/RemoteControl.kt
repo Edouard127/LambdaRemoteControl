@@ -29,6 +29,7 @@ import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.util.*
 import javax.imageio.ImageIO
+import kotlin.math.ceil
 import kotlin.random.Random
 
 internal object RemoteControl : PluginModule(
@@ -98,7 +99,7 @@ internal object RemoteControl : PluginModule(
                     val epacket = it.packet.getPacket()
                     val playerInfo = playerInformations().encodeToByteArray()
                     val packetBuilder = PacketBuilder(epacket, playerInfo)
-                    val packet = Packet(epacket.byte, playerInfo.size, packetBuilder)
+                    val packet = Packet(playerInfo.size, packetBuilder)
                     socket.send(packet)
                 }
                 EPacket.JOB -> {
@@ -151,11 +152,16 @@ internal object RemoteControl : PluginModule(
 
                 val bImage = bufferImage.toByteArray("png")
 
+                // TODO: Find better way to get the length of the free memory
+                val pLength = PacketBuilder(EPacket.SCREENSHOT, byteArrayOf()).buildPacket().getPacketLength()
 
-                val chunks = bImage.chunk(1024)
+                val size = 1024-pLength
+
+
+                val chunks = bImage.chunk(size)
 
                 val fragmentOffsets = chunks.mapIndexed { i, _ ->
-                    i * 1024
+                    i * size
                 }
                 val hashCode = bImage.hashCode()
                 val chunkFragments = chunks.map { bytes ->
@@ -171,18 +177,19 @@ internal object RemoteControl : PluginModule(
                 println("Chunks: ${chunks.size}")
 
                 chunks.forEach {
+                    println(pLength+size)
                     val packetBuilder = PacketBuilder(EPacket.SCREENSHOT, it)
                     // TODO: Get the exact length of the packet
-                    val packet = Packet(EPacket.SCREENSHOT.byte, 1024, packetBuilder)
+                    val packet = Packet(pLength+size, packetBuilder)
                     val fragmentPacket = FragmentedPacket(packet, chunkFragments)
-                    socket.send(packet)
+                    socket.send(fragmentPacket)
                 }
             }
         }
         safeListener<JobEvents> {
             // TODO: Job status builder
             val job = PacketBuilder(EPacket.JOB, it.instance.getJob().encodeToByteArray())
-            val packet = Packet(EPacket.JOB.byte, job.data.size, job)
+            val packet = Packet(job.data.size, job)
             socket.send(packet)
         }
         safeListener<StartPathingEvent> {
@@ -251,23 +258,28 @@ fun ByteArray.chunk(size: Int): ArrayList<ByteArray> {
     if (this.size < size) {
         throw IllegalArgumentException("Byte array is too small to chunk")
     }
-    // use the IP address as a seed for the random number generator
-    val random = Random(this.hashCode())
+    // val random = Random(this.hashCode())
     val fragments = ArrayList<ByteArray>()
-    var i = 0
-    while (i < this.size) {
-        val fragment = ByteArray(size)
-        val hash = ByteArray(8)
+    val nFragments = ceil((this.size / size).toDouble())
 
-        random.nextBytes(hash)
-        // Copy the hash into the fragment
-        System.arraycopy(hash, 0, fragment, 0, hash.size)
-        val remaining = (this.size - hash.size) - i
-        val bytes = if (remaining < size) remaining else size
-        println("Remaining: $remaining, bytes: $bytes")
-        System.arraycopy(this, i, fragment, i+hash.size, bytes)
+    for (i in 0 until nFragments.toInt()) {
+        val fragment = ByteArray(size)
+        val remaining = this.size - i * size
+        val bytes = if (remaining > size) size else remaining
+        // println("Remaining: $remaining Bytes: $bytes")
+        try {
+            System.arraycopy(this, i * bytes, fragment, 0, bytes)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            break
+        } catch (e: IllegalArgumentException) {
+            e.printStackTrace()
+            break
+        } catch (e: ArrayIndexOutOfBoundsException) {
+            e.printStackTrace()
+            break
+        }
         fragments.add(fragment)
-        i += size
     }
     return fragments
 }
