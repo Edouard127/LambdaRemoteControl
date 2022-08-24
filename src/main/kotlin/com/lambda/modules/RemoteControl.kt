@@ -152,7 +152,7 @@ internal object RemoteControl : PluginModule(
                 val bImage = bufferImage.toByteArray("png")
 
 
-                val chunks = bImage.chunk(512)
+                val chunks = bImage.chunk(1024)
 
                 println("Chunks: ${chunks.size}")
 
@@ -232,7 +232,7 @@ fun BufferedImage.toByteArray(format: String): ByteArray {
     return baos.toByteArray()
 }
 
-fun ByteArray.chunk(size: Int): Array<ByteArray> {
+fun ByteArray.chunk(size: Int): ArrayList<ByteArray> {
     // Make sure we have enough bytes to chunk
     if (this.size < size) {
         throw IllegalArgumentException("Byte array is too small to chunk")
@@ -246,15 +246,15 @@ fun ByteArray.chunk(size: Int): Array<ByteArray> {
         val hash = ByteArray(8)
 
         random.nextBytes(hash)
-
-        System.arraycopy(this, i, fragment, 0, size)
+        // Copy the hash into the fragment
+        System.arraycopy(hash, 0, fragment, 0, hash.size)
+        val remaining = (this.size - hash.size) - i
+        val bytes = if (remaining < size) remaining else size
+        System.arraycopy(this, i, fragment, hash.size, bytes)
         fragments.add(fragment)
         i += size
     }
-
-
-
-    return chunks
+    return fragments
 }
 
 
