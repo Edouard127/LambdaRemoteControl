@@ -46,9 +46,9 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
                     val line = this.breader.readLine()
                     if (line != null && line.isNotEmpty()) {
                         val input = line.split(" ")
-                        val byte = input[1].toByte()
+                        val byte = input[2].toByte()
 
-                        val body = input.subList(2, input.size-1).joinToString(" ").encodeToByteArray()
+                        val body = input.subList(4, input.size-1).joinToString(" ").encodeToByteArray()
 
                         val packet = PacketUtils.getPacket(byte, body)
                         this.receive(packet)
@@ -81,13 +81,23 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
     }
 
 
-    override fun send(packet: Packet) {
+    override fun send(packet: Any?) {
         try {
-            println(packet.getString())
-            val bw = getBufferedWriter()
-            bw.write(packet.getString())
-            bw.newLine()
-            bw.flush()
+            when (packet) {
+                is Packet -> {
+                    println(packet.getString())
+                    this.bwriter.write(packet.getString())
+                    this.bwriter.newLine()
+                    this.bwriter.flush()
+                }
+                is FragmentedPacket -> {
+                    println(packet.getString())
+                    this.bwriter.write(packet.getString())
+                    this.bwriter.newLine()
+                    this.bwriter.flush()
+                }
+                else -> throw Exception("Invalid packet type")
+            }
         } catch (e: IOException) {
             e.message?.let { Debug.error("Could not send packet", it) }
             e.printStackTrace()

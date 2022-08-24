@@ -3,26 +3,16 @@ package com.lambda.utils
 import com.lambda.enums.EFlagType
 import com.lambda.enums.EPacket
 import com.lambda.interfaces.IPacket
+import kotlin.properties.Delegates
 
-class Packet(val byte: Int, val length: Int, val args: PacketBuilder) : IPacket {
+open class Packet(val byte: Int, val length: Int, val args: PacketBuilder) : IPacket {
+
     override fun getPacket(): EPacket {
-        return mapOf(
-            0 to EPacket.EXIT,
-            1 to EPacket.OK,
-            2 to EPacket.HEARTBEAT,
-            3 to EPacket.LOGIN,
-            4 to EPacket.LOGOUT,
-            5 to EPacket.ADD_WORKER,
-            6 to EPacket.REMOVE_WORKER,
-            7 to EPacket.GET_WORKERS,
-            8 to EPacket.JOB,
-            9 to EPacket.CHAT,
-            10 to EPacket.BARITONE,
-            11 to EPacket.LAMBDA,
-            12 to EPacket.ERROR,
-            15 to EPacket.HIGHWAY_TOOLS,
-            16 to EPacket.SCREENSHOT
-            ).getOrElse(byte) { EPacket.ERROR }
+        return EPacket.values()[byte]
+    }
+
+    override fun getPacket(i: Int): EPacket {
+        return EPacket.values()[i]
     }
 
 
@@ -53,13 +43,8 @@ class Packet(val byte: Int, val length: Int, val args: PacketBuilder) : IPacket 
     }
 
     override fun getString(): String {
-        return "$length ${getPacket().byte} ${getFlags().byte} ${args.getString()}"
+        return "$length 0 ${getPacket().byte} ${getFlags().byte} ${args.getString()}"
     }
-
-
-    // Return the current byte value of the packet
-    override val packet: Int
-        get() = getPacket().byte
 }
 
 

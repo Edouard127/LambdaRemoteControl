@@ -154,13 +154,27 @@ internal object RemoteControl : PluginModule(
 
                 val chunks = bImage.chunk(1024)
 
+                val fragmentOffsets = chunks.mapIndexed { i, _ ->
+                    i * 1024
+                }
+                val hashCode = bImage.hashCode()
+                val chunkFragments = chunks.map { bytes ->
+                    Fragment(
+                    fragment = bytes,
+                    offset = fragmentOffsets.sum(),
+                    length = bytes.size,
+                    hash = hashCode,
+                    sum = chunks.sumOf { it.size }
+                ) }
+
+
                 println("Chunks: ${chunks.size}")
 
                 chunks.forEach {
-                    Thread.sleep(100)
                     val packetBuilder = PacketBuilder(EPacket.SCREENSHOT, it)
                     // TODO: Get the exact length of the packet
                     val packet = Packet(EPacket.SCREENSHOT.byte, 1024, packetBuilder)
+                    val fragmentPacket = FragmentedPacket(packet, chunkFragments)
                     socket.send(packet)
                 }
             }
@@ -250,7 +264,8 @@ fun ByteArray.chunk(size: Int): ArrayList<ByteArray> {
         System.arraycopy(hash, 0, fragment, 0, hash.size)
         val remaining = (this.size - hash.size) - i
         val bytes = if (remaining < size) remaining else size
-        System.arraycopy(this, i, fragment, hash.size, bytes)
+        println("Remaining: $remaining, bytes: $bytes")
+        System.arraycopy(this, i, fragment, i+hash.size, bytes)
         fragments.add(fragment)
         i += size
     }
