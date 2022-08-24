@@ -1,14 +1,9 @@
 package com.lambda.utils
 
-import baritone.BaritoneProvider
-import baritone.api.utils.Helper.mc
 import com.lambda.client.event.LambdaEventBus
-import com.lambda.client.util.BaritoneUtils
-import com.lambda.client.util.math.VectorUtils.distanceTo
-import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.enums.EJobEvents
 
-class JobUtils(val worker: WorkerLogger, private val jobs: MutableList<Job> = mutableListOf()) {
+class JobUtils(private val jobs: MutableList<Job> = mutableListOf()) {
 
     var jobEvent: Job? = null
     fun checkJobs() {

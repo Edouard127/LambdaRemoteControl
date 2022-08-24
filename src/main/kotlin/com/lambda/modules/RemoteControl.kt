@@ -53,11 +53,9 @@ internal object RemoteControl : PluginModule(
         PASSWORD_TYPE.NOTRANDOM -> password
     }
     val secretKey = s.encodeToByteArray()
-    private val logger = WorkerLogger()
     private lateinit var socket: SocketManager
-    private val jUtils = JobUtils(logger)
+    private val jUtils = JobUtils()
     private val bUtils = BaritoneUtils()
-    private val timer = TickTimer()
 
     init {
 
@@ -93,7 +91,7 @@ internal object RemoteControl : PluginModule(
                 }
                 EPacket.GET_WORKERS -> {
                     val epacket = it.packet.getPacket()
-                    val packet = Packet(epacket.byte, WorkerLogger().playerInformations().encodeToByteArray())
+                    val packet = Packet(epacket.byte, playerInformations().encodeToByteArray())
                     socket.send(packet)
                 }
                 EPacket.JOB -> {
@@ -123,10 +121,6 @@ internal object RemoteControl : PluginModule(
         safeListener<TickEvent.ClientTickEvent> {
             jUtils.checkJobs()
             bUtils.pathingGoalCheck()
-            if (timer.tick(1000L, resetIfTick = true)) {
-                logger.addPosition(player.position)
-                if (logger.shouldSaveMemory()) logger.saveMemory()
-            }
         }
         safeListener<JobEvents> {
             // TODO: Job status builder
@@ -189,18 +183,16 @@ private fun SafeClientEvent.getScreen() = if (mc.isIntegratedServerRunning) {
     GuiMultiplayer(GuiMainMenu())
 }
 
-
-fun parseBlockPos(s: String): BlockPos {
-    val split = s.split(" ").drop(1)
-    println(split.size)
-    try {
-        if (split.size == 3) {
-            return BlockPos(split[0].toInt(), split[1].toInt(), split[2].toInt())
-        } else if (split.size == 2) {
-            return BlockPos(split[0].toInt(), 0, split[1].toInt())
-        }
-    } catch (e: Exception) {
-        return BlockPos.ORIGIN
+fun SafeClientEvent.playerInformations(): String = "Player:${mc.player.name} Health:${mc.player.health} Food:${mc.player.foodStats.foodLevel} PlayersRender:${mc.world.playerEntities.size} Coordinates:${mc.player.position} MainHand:${mc.player.heldItemMainhand.originalName} OffHand:${mc.player.heldItemOffhand.originalName} ${armorInformations()}"
+fun SafeClientEvent.armorInformations(): String {
+    val s = StringBuilder()
+    s.append("Armor: ")
+    for (itemStack in mc.player.armorInventoryList.reversed()) {
+        if (itemStack.isEmpty) continue
+        val dura = itemStack.maxDamage - itemStack.itemDamage
+        val duraMultiplier = dura / itemStack.maxDamage.toFloat()
+        val duraPercent = MathUtils.round(duraMultiplier * 100.0f, 1).toFloat()
+        s.append("${itemStack.originalName}:$duraPercent% ")
     }
-    return BlockPos.ORIGIN
+    return s.toString()
 }
