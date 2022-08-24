@@ -1,5 +1,6 @@
 package com.lambda.utils
 
+import baritone.api.utils.Helper.mc
 import com.lambda.client.event.LambdaEventBus
 import com.lambda.enums.EJobEvents
 import com.lambda.enums.EWorkerStatus
@@ -11,73 +12,24 @@ import net.minecraft.util.math.BlockPos
 class Job
     (val type: EWorkerType,
      val goal: BlockPos,
-     override val cancelable: Boolean = true,
-     val player: EntityPlayerSP,
-     private val jobs: JobUtils,
-     override val cancelled: Boolean = false,
+     override var cancelled: Boolean = false,
+     override var finished: Boolean = false
     )
     : Worker() {
 
-    override fun store() {
-        // Store the job in the job list
-        jobs.addJob(this)
-        this.emitEvent(EJobEvents.JOB_STARTED)
-        Debug.log("Job started")
-    }
 
-    override fun run() {
-        TODO("Not yet implemented")
-    }
-
-    override fun getProgress(): String {
-        TODO("Not yet implemented")
-    }
-
-    override fun remove() {
-        // Remove the job from the job list
-        jobs.removeJob(this)
-        this.emitEvent(EJobEvents.JOB_CANCELLED)
-        Debug.log("Job cancelled")
+    override fun getJob(): String = "Job type:${this.type.byte} Status:${BaritoneUtils().status.byte} Goal:${this.goal} Player:${mc.player.name} Position:${mc.player.position}"
+    override fun end() {
+        this.finished = true
     }
 
     override fun cancel() {
-        TODO("Not yet implemented")
-    }
-
-    override fun getJob(): String {
-        val job = StringBuilder()
-        job.append("Job type:${this.type.byte} ")
-        job.append("Status:${BaritoneUtils().status.byte} ")
-        job.append("Cancelable:${this.cancelable} ")
-        job.append("Goal:${this.goal} ")
-        job.append("Player:${this.player.name} ")
-        return job.toString()
+        this.cancelled = true
     }
 
     override fun emitEvent(event: EJobEvents) {
         LambdaEventBus.post(JobEvents(event, this))
     }
-
-    override fun getPos(): BlockPos {
-        TODO("Not yet implemented")
-    }
-
-    override fun getStatus(): EWorkerStatus {
-        TODO("Not yet implemented")
-    }
-
-    /*override val cancelled: Boolean
-        get() = cancelled
-
-    override fun cancel() {
-        cancelled = true
-    }*/
-    /*override fun getStatus(): EWorkerStatus {
-        return Jobs
-    }
-    override fun getPos(): BlockPos {
-        return BlockPos.ORIGIN
-    }*/
 
 }
 

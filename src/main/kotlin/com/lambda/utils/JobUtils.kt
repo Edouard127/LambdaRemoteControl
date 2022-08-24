@@ -1,6 +1,7 @@
 package com.lambda.utils
 
 import baritone.BaritoneProvider
+import baritone.api.utils.Helper.mc
 import com.lambda.client.event.LambdaEventBus
 import com.lambda.client.util.BaritoneUtils
 import com.lambda.client.util.math.VectorUtils.distanceTo
@@ -18,11 +19,22 @@ class JobUtils(val worker: WorkerLogger, private val jobs: MutableList<Job> = mu
                         jobEvent = this
                         LambdaEventBus.post(JobEvents(event = EJobEvents.JOB_STARTED, instance = this))
                     }
+                    if (this.finished) {
+                        LambdaEventBus.post(JobEvents(event = EJobEvents.JOB_FINISHED, instance = this))
+                        jobs.remove(this)
+                        jobEvent = null
+                    }
                 }
                 if (jobEvent != null && this == null) {
                     // All jobs are done
                 }
             }
+        }
+    }
+    fun currentJob(): Job? = jobs.firstOrNull()
+    fun finishJob() {
+        currentJob()?.run {
+            this.finished = true
         }
     }
     fun executeJob(job: Job) {

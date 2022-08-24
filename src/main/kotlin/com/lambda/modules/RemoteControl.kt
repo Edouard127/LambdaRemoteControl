@@ -92,12 +92,9 @@ internal object RemoteControl : PluginModule(
                     // TODO: Remove worker to friendly list
                 }
                 EPacket.GET_WORKERS -> {
-                    Debug.purple("Get workers")
                     val epacket = it.packet.getPacket()
                     val packet = Packet(epacket.byte, WorkerLogger().playerInformations().encodeToByteArray())
-                    it.socket.write("${packet.getPacket().byte} ${packet.getFlags().byte} ${WorkerLogger().playerInformations()}")
-                    it.socket.newLine()
-                    it.socket.flush()
+                    socket.send(packet)
                 }
                 EPacket.JOB -> {
                     // TODO
@@ -141,7 +138,7 @@ internal object RemoteControl : PluginModule(
                 JOB_FAILED -> {}
 
                 JOB_FINISHED -> {
-                    val packet = Packet(EPacket.JOB.byte, byteArrayOf(EWorkerStatus.IDLE.byte))
+                    val packet = Packet(EPacket.JOB.byte, it.instance.getJob().encodeToByteArray())
                     socket.send(packet)
                 }
                 JOB_PAUSED -> {}
@@ -155,17 +152,15 @@ internal object RemoteControl : PluginModule(
             jUtils.addJob(Job(
                 type = EWorkerType.BARITONE,
                 goal = it.goal,
-                cancelable = true,
-                player = player,
-                jobs = jUtils,
             ))
         }
         safeListener<StopPathingEvent> {
             println("Baritone stopped pathing")
+            jUtils.currentJob()?.run {
+                this.end()
+            }
         }
-        safeListener<UpdatePathingEvent> {
-            println("Baritone update pathing")
-        }
+        safeListener<UpdatePathingEvent> {}
     }
 
 }

@@ -8,17 +8,11 @@ import net.minecraft.util.math.BlockPos
 
 abstract class Worker {
 
-    abstract val cancelled: Boolean
+    abstract var cancelled: Boolean
+    abstract var finished: Boolean
 
-    abstract val cancelable: Boolean
-    abstract fun store()
-    abstract fun run()
-    abstract fun getProgress(): String
     abstract fun emitEvent(event: EJobEvents)
-    abstract fun getPos(): BlockPos
-    abstract fun getStatus(): EWorkerStatus
     abstract fun getJob(): String
-    abstract fun remove()
-
-    abstract fun cancel()
+    abstract fun end(): Unit
+    abstract fun cancel(): Unit
 }
