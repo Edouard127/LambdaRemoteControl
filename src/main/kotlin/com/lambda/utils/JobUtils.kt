@@ -16,7 +16,7 @@ class JobUtils(val worker: WorkerLogger, private val jobs: MutableList<Job> = mu
                 if (this != null) {
                     if (jobEvent != this) {
                         jobEvent = this
-                        LambdaEventBus.post(BaritoneEvents(job = this))
+                        LambdaEventBus.post(JobEvents(event = EJobEvents.JOB_STARTED, instance = this))
                     }
                 }
                 if (jobEvent != null && this == null) {

@@ -131,12 +131,11 @@ internal object RemoteControl : PluginModule(
                 if (logger.shouldSaveMemory()) logger.saveMemory()
             }
         }
-        safeListener<JobEvents> { ev ->
-            Debug.purple("Job", ev.event.name)
+        safeListener<JobEvents> {
             // TODO: Job status builder
-            when(ev.event) {
+            when(it.event) {
                 JOB_STARTED -> {
-                    val packet = Packet(EPacket.JOB.byte, ev.instance.getJob().encodeToByteArray())
+                    val packet = Packet(EPacket.JOB.byte, it.instance.getJob().encodeToByteArray())
                     socket.send(packet)
                 }
                 JOB_FAILED -> {}
@@ -149,12 +148,6 @@ internal object RemoteControl : PluginModule(
                 JOB_RESUMED -> {}
                 JOB_CANCELLED -> {}
                 JOB_SCHEDULED -> {}
-            }
-        }
-        safeListener<BaritoneEvents> {
-            jUtils.executeJob(it.job).run {
-                val packet = Packet(EPacket.JOB.byte, it.job.getJob().encodeToByteArray())
-                socket.send(packet)
             }
         }
         safeListener<StartPathingEvent> {
