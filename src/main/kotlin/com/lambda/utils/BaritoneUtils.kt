@@ -3,6 +3,7 @@ package com.lambda.utils
 import baritone.api.utils.Helper.mc
 import com.lambda.client.event.LambdaEventBus
 import com.lambda.client.util.BaritoneUtils
+import com.lambda.enums.EWorkerStatus
 import net.minecraft.util.math.BlockPos
 
 class BaritoneUtils
@@ -26,4 +27,6 @@ class BaritoneUtils
             lastPathEvent = null
         }
     }
+    val status: EWorkerStatus
+        get() = if (BaritoneUtils.primary?.pathingBehavior?.current?.path?.dest != null) EWorkerStatus.BUSY else EWorkerStatus.IDLE
 }

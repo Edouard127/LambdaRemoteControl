@@ -47,6 +47,7 @@ class Job
     override fun getJob(): String {
         val job = StringBuilder()
         job.append("Job type:${this.type.byte} ")
+        job.append("Status:${BaritoneUtils().status.byte} ")
         job.append("Cancelable:${this.cancelable} ")
         job.append("Goal:${this.goal} ")
         job.append("Player:${this.player.name} ")
