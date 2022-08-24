@@ -1,6 +1,5 @@
 package com.lambda.utils
 
-import baritone.api.utils.BetterBlockPos
 import baritone.api.utils.Helper.mc
 import com.lambda.client.event.LambdaEventBus
 import com.lambda.client.util.BaritoneUtils
