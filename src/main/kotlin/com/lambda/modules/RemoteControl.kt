@@ -56,6 +56,7 @@ internal object RemoteControl : PluginModule(
     private val logger = WorkerLogger()
     private lateinit var socket: SocketManager
     private val jUtils = JobUtils(logger)
+    private val bUtils = BaritoneUtils()
     private val timer = TickTimer()
 
     init {
@@ -105,19 +106,7 @@ internal object RemoteControl : PluginModule(
                     MessageSendHelper.sendServerMessage(args.joinToString(" "))
                 }
                 EPacket.BARITONE -> {
-                    Debug.purple("Baritone command:", args.joinToString(" "))
-
-                    val goal = parseBlockPos(args.joinToString(" "))
-
-                    jUtils.addJob(Job(
-                        type = EWorkerType.BARITONE,
-                        goal = goal,
-                        cancelable = true,
-                        player = player,
-                        jobs = jUtils,
-                        args = args.toTypedArray()
-                    ))
-                    //MessageSendHelper.sendBaritoneCommand(args.joinToString(" "))
+                    MessageSendHelper.sendBaritoneCommand(args.joinToString(" "))
                 }
                 EPacket.LAMBDA -> {
                     CommandManager.runCommand(args.joinToString(" "))
@@ -136,6 +125,7 @@ internal object RemoteControl : PluginModule(
         }
         safeListener<TickEvent.ClientTickEvent> {
             jUtils.checkJobs()
+            bUtils.pathingGoalCheck()
             if (timer.tick(1000L, resetIfTick = true)) {
                 logger.addPosition(player.position)
                 if (logger.shouldSaveMemory()) logger.saveMemory()
@@ -162,11 +152,26 @@ internal object RemoteControl : PluginModule(
             }
         }
         safeListener<BaritoneEvents> {
-            println("Baritone event: $it")
             jUtils.executeJob(it.job).run {
                 val packet = Packet(EPacket.JOB.byte, it.job.getJob().encodeToByteArray())
                 socket.send(packet)
             }
+        }
+        safeListener<StartPathingEvent> {
+            println("Start pathing event: ${it.goal}")
+            jUtils.addJob(Job(
+                type = EWorkerType.BARITONE,
+                goal = it.goal,
+                cancelable = true,
+                player = player,
+                jobs = jUtils,
+            ))
+        }
+        safeListener<StopPathingEvent> {
+            println("Baritone stopped pathing")
+        }
+        safeListener<UpdatePathingEvent> {
+            println("Baritone update pathing")
         }
     }
 

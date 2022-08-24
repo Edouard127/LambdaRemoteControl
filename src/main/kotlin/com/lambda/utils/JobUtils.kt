@@ -1,5 +1,6 @@
 package com.lambda.utils
 
+import baritone.BaritoneProvider
 import com.lambda.client.event.LambdaEventBus
 import com.lambda.client.util.BaritoneUtils
 import com.lambda.client.util.math.VectorUtils.distanceTo
@@ -8,34 +9,24 @@ import com.lambda.enums.EJobEvents
 
 class JobUtils(val worker: WorkerLogger, private val jobs: MutableList<Job> = mutableListOf()) {
 
-    val isPathing
-        get() = BaritoneUtils.isPathing
-
+    var jobEvent: Job? = null
     fun checkJobs() {
         if (jobs.isNotEmpty()) {
-            jobs.first().run {
-                //val process = GoalNear(player.position, 2147483647).goalPos ?: return
-
-                if (this.player.position.distanceTo(this.goal) <= 1) {
-                    this.isDone = true
-                    jobs.remove(this)
+            jobs.firstOrNull().run {
+                if (this != null) {
+                    if (jobEvent != this) {
+                        jobEvent = this
+                        LambdaEventBus.post(BaritoneEvents(job = this))
+                    }
                 }
-                if (!worker.isWorking() && isPathing) {
-                    Debug.error("[${this.player.name}] is pathing but not working")
-                    this.isDone = true
-                    cancelJob(this)
-                }
-                if (!isPathing) {
-                    if (!this.isDone) LambdaEventBus.post(BaritoneEvents(job = this))
+                if (jobEvent != null && this == null) {
+                    // All jobs are done
                 }
             }
         }
     }
     fun executeJob(job: Job) {
         job.emitEvent(EJobEvents.JOB_STARTED)
-        MessageSendHelper.sendBaritoneCommand(*job.args)
-        /* So the job is executed if thisway is used */
-        MessageSendHelper.sendBaritoneCommand("path")
     }
     fun addJob(job: Job) {
         jobs.add(job)

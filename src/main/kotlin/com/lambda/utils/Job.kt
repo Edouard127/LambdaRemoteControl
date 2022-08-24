@@ -15,8 +15,7 @@ class Job
      val player: EntityPlayerSP,
      private val jobs: JobUtils,
      override val cancelled: Boolean = false,
-     var isDone: Boolean = false,
-     val args: Array<String>)
+    )
     : Worker() {
 
     override fun store() {
@@ -49,6 +48,7 @@ class Job
         val job = StringBuilder()
         job.append("Job type:${this.type.byte} ")
         job.append("Cancelable:${this.cancelable} ")
+        job.append("Goal:${this.goal} ")
         job.append("Player:${this.player.name} ")
         return job.toString()
     }
