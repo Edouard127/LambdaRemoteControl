@@ -1,5 +1,6 @@
 package com.lambda.utils
 
+import baritone.api.utils.BetterBlockPos
 import baritone.api.utils.Helper.mc
 import com.lambda.client.event.LambdaEventBus
 import com.lambda.client.util.BaritoneUtils
@@ -19,7 +20,7 @@ class BaritoneUtils
             }
         }
         if (lastPathEvent == null && goal != null) {
-            LambdaEventBus.post(StartPathingEvent(newPos))
+            LambdaEventBus.post(StartPathingEvent(goal))
             lastPathEvent = newPos
         }
         if (lastPathEvent != null && goal == null) {
@@ -29,4 +30,5 @@ class BaritoneUtils
     }
     val status: EWorkerStatus
         get() = if (BaritoneUtils.primary?.pathingBehavior?.current?.path?.dest != null) EWorkerStatus.BUSY else EWorkerStatus.IDLE
+
 }
