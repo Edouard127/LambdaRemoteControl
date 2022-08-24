@@ -1,38 +1,35 @@
 package com.lambda.modules
 
-import baritone.command.BaritoneChatControl
-import baritone.utils.BaritoneProcessHelper
+import baritone.api.utils.Helper.mc
 import com.lambda.SocketPlugin
 import com.lambda.client.command.CommandManager
 import com.lambda.client.commons.utils.MathUtils
 import com.lambda.client.event.SafeClientEvent
-import com.lambda.client.event.events.BaritoneCommandEvent
-import com.lambda.client.gui.mc.LambdaGuiDisconnected
+import com.lambda.client.event.listener.listener
 import com.lambda.client.module.Category
 import com.lambda.client.plugin.api.PluginModule
 import com.lambda.client.util.items.originalName
 import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
-import com.lambda.client.util.threads.runSafe
 import com.lambda.client.util.threads.safeListener
 import com.lambda.enums.EJobEvents.*
 import com.lambda.enums.EPacket
 import com.lambda.enums.EWorkerType
 import com.lambda.utils.*
+import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.GuiDisconnected
 import net.minecraft.client.gui.GuiMainMenu
 import net.minecraft.client.gui.GuiMultiplayer
 import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.client.multiplayer.WorldClient
-import net.minecraft.util.math.BlockPos
+import net.minecraft.util.ScreenShotHelper
 import net.minecraft.util.text.TextComponentString
 import net.minecraftforge.fml.client.FMLClientHandler
 import net.minecraftforge.fml.common.gameevent.TickEvent
-import java.time.LocalTime
-import java.util.UUID
-import com.lambda.client.module.modules.player.Timer
-import com.lambda.client.util.TickTimer
-import com.lambda.enums.EWorkerStatus
-import net.minecraft.client.Minecraft
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
+import java.util.*
+import javax.imageio.ImageIO
 
 internal object RemoteControl : PluginModule(
     name = "Remote Control",
@@ -56,6 +53,9 @@ internal object RemoteControl : PluginModule(
     private lateinit var socket: SocketManager
     private val jUtils = JobUtils()
     private val bUtils = BaritoneUtils()
+    private var gameState = GameState.NONE
+    private var serverData: ServerData? = null
+    private var getScreenShot = false
 
     init {
 
@@ -72,6 +72,7 @@ internal object RemoteControl : PluginModule(
         }
 
         safeListener<SocketDataReceived> {
+            println(it.packet.getPacket())
             val args: List<String> = it.parse()
             when(it.packet.getPacket()) {
                 EPacket.EXIT -> {}
@@ -79,8 +80,12 @@ internal object RemoteControl : PluginModule(
                 EPacket.HEARTBEAT -> {
                     Debug.log("Heartbeat")
                 }
-                EPacket.LOGIN -> login(ServerData(args[0], args[1], args[3].toBooleanStrict()))
-                EPacket.LOGOUT -> logout(args.joinToString(" "))
+                EPacket.LOGIN -> {
+                    Debug.log(args.joinToString(" "))
+                    serverData = ServerData(args[0], args[1], args[2].toBooleanStrict())
+                    gameState = GameState.LOGIN
+                }
+                EPacket.LOGOUT -> gameState = GameState.LOGOUT
                 EPacket.ADD_WORKER -> {
                     //addWorker(args.joinToString { it })
                     // TODO: Add worker to friendly list
@@ -116,11 +121,41 @@ internal object RemoteControl : PluginModule(
                     val hwt = HighwayToolsHandler(it.parseByteArray())
                     CommandManager.runCommand("set highwayTools ${hwt.getPacket().string} ${hwt.getArguments().joinToString(" ")}")
                 }
+                EPacket.SCREENSHOT -> getScreenShot = true
             }
         }
         safeListener<TickEvent.ClientTickEvent> {
             jUtils.checkJobs()
             bUtils.pathingGoalCheck()
+        }
+        listener<TickEvent.ClientTickEvent> {
+            when (gameState) {
+                GameState.LOGIN -> {
+                    serverData?.serverIP?.let { ServerData(serverData!!.serverName, it, false) }?.let { login(it) }
+                    gameState = GameState.NONE
+                }
+                GameState.LOGOUT -> {
+                    logout("Client sent logout packet")
+                    gameState = GameState.NONE
+                }
+                GameState.NONE -> {}
+            }
+            if (getScreenShot) {
+                getScreenShot = false
+                val width = FMLClientHandler.instance().client.displayWidth
+                val height = FMLClientHandler.instance().client.displayHeight
+                val frameBuffer = FMLClientHandler.instance().client.framebuffer
+                val bufferImage = ScreenShotHelper.createScreenshot(width, height, frameBuffer)
+
+                val bImage = bufferImage.toByteArray("png")
+
+                val chunks = bImage.chunk(1024)
+
+                chunks.forEach {
+                    val packet = Packet(EPacket.SCREENSHOT.byte, it)
+                    socket.send(packet)
+                }
+            }
         }
         safeListener<JobEvents> {
             // TODO: Job status builder
@@ -158,26 +193,24 @@ internal object RemoteControl : PluginModule(
     }
 
 }
-private fun SafeClientEvent.login(server: ServerData) {
+
+
+
+private fun login(server: ServerData) {
     try {
-        FMLClientHandler.instance().connectToServer(mc.currentScreen, server);
+        FMLClientHandler.instance().connectToServer(GuiMainMenu(), server)
     } catch (e: Exception) {
         e.message?.let { Debug.error("Could not log in", it) }
         e.printStackTrace()
     }
 }
-private fun SafeClientEvent.logout(reason: String) {
-    try {
-        mc.connection?.networkManager?.closeChannel(TextComponentString(""))
-        mc.loadWorld(null as WorldClient?)
+private fun logout(vararg reason: String) {
+    mc.player.connection.networkManager.closeChannel(TextComponentString(""))
+    mc.loadWorld(null as WorldClient?)
 
-        mc.displayGuiScreen(LambdaGuiDisconnected(arrayOf(reason), getScreen(), true, LocalTime.now()))
-    } catch (e: Exception) {
-        MessageSendHelper.sendChatMessage("Could not log out ${e.message}")
-        e.printStackTrace()
-    }
+    mc.displayGuiScreen(GuiDisconnected(getScreen(), "disconnect.lost", TextComponentString(reason.joinToString(" "))))
 }
-private fun SafeClientEvent.getScreen() = if (mc.isIntegratedServerRunning) {
+private fun getScreen() = if (mc.isIntegratedServerRunning) {
     GuiMainMenu()
 } else {
     GuiMultiplayer(GuiMainMenu())
@@ -195,4 +228,33 @@ fun SafeClientEvent.armorInformations(): String {
         s.append("${itemStack.originalName}:$duraPercent% ")
     }
     return s.toString()
+}
+
+// convert BufferedImage to byte[]
+fun BufferedImage.toByteArray(format: String): ByteArray {
+    val baos = ByteArrayOutputStream()
+    ImageIO.write(this, format, baos)
+    return baos.toByteArray()
+}
+
+fun ByteArray.chunk(size: Int): List<ByteArray> {
+    // Make sure we have enough bytes to chunk
+    if (this.size < size) {
+        throw IllegalArgumentException("Byte array is too small to chunk")
+    }
+    // Chunk the array into a list of byte arrays
+    val chunks = mutableListOf<ByteArray>()
+    var i = 0
+    while (i < this.size) {
+        chunks.add(this.copyOfRange(i, (i + size).coerceAtMost(this.size)))
+        i += size
+    }
+    return chunks
+}
+
+
+enum class GameState {
+    LOGIN,
+    LOGOUT,
+    NONE,
 }
