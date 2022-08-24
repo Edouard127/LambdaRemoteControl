@@ -8,4 +8,5 @@ interface IPacket {
     fun getPacket(): EPacket
     fun getFlags(): EFlagType
     fun getData(): ByteArray
+    fun getString(): String
 }

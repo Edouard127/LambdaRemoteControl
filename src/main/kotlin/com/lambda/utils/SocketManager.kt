@@ -1,25 +1,13 @@
 package com.lambda.utils
 
 import com.lambda.client.event.Event
-import com.lambda.client.event.SafeClientEvent
-import com.lambda.client.gui.mc.LambdaGuiDisconnected
-import com.lambda.client.util.text.MessageSendHelper
-import com.lambda.enums.EFlagType
 import com.lambda.enums.EPacket
 import com.lambda.interfaces.*
 import com.lambda.modules.RemoteControl
-import net.minecraft.client.gui.GuiMainMenu
-import net.minecraft.client.gui.GuiMultiplayer
-import net.minecraft.client.gui.GuiScreen
-import net.minecraft.client.multiplayer.ServerData
-import net.minecraft.client.multiplayer.WorldClient
-import net.minecraft.util.text.TextComponentString
-import net.minecraftforge.fml.client.FMLClientHandler
 import java.io.*
 import java.net.Socket
-import java.time.LocalTime
 
-class SocketManager(server: String, port: Int, username: String, password: String) : IGameEventManager, ISocketManager, Event {
+class SocketManager(server: String, port: Int, username: String, password: String) : ISocketManager, Event {
 
     private lateinit var socket: Socket
     lateinit var outputStreamWriter: OutputStreamWriter
@@ -50,15 +38,15 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
             try {
 
                 val epacket = EPacket.ADD_WORKER
-                val getPacket = PacketUtils.getPacketBuilder(epacket, EFlagType.CLIENT, this.username.toByteArray(), this.password.toByteArray())
-                val packetBuilder = PacketBuilder(epacket, getPacket)
+                val getPacket = PacketUtils.getPacketBuilder(epacket, this.username.toByteArray(), this.password.toByteArray())
+                val packetBuilder = PacketBuilder(epacket, getPacket.data)
 
                 send(packetBuilder.buildPacket())
                 while(true) {
                     val line = this.breader.readLine()
                     if (line != null && line.isNotEmpty()) {
                         val input = line.split(" ")
-                        val byte = input[0].toByte()
+                        val byte = input[1].toByte()
 
                         val body = input.subList(2, input.size-1).joinToString(" ").encodeToByteArray()
 
@@ -95,14 +83,9 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
 
     override fun send(packet: Packet) {
         try {
-            val epacket = packet.getPacket()
-            val flag = packet.getFlags()
-            val packetData = PacketDataBuilder(epacket, packet.args)
-
-            val args = PacketBuilder(epacket, packetData)
-
+            println(packet.getString())
             val bw = getBufferedWriter()
-            bw.write("${args.packet.byte} ${flag.byte} ${args.getString()}")
+            bw.write(packet.getString())
             bw.newLine()
             bw.flush()
         } catch (e: IOException) {
@@ -110,28 +93,6 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
             e.printStackTrace()
         }
     }
-
-
-    override fun SafeClientEvent.login(server: ServerData) {
-        try {
-            FMLClientHandler.instance().connectToServer(mc.currentScreen, server);
-        } catch (e: Exception) {
-            e.message?.let { Debug.error("Could not log in", it) }
-            e.printStackTrace()
-        }
-    }
-    override fun SafeClientEvent.logout(reason: String) {
-        try {
-            mc.connection?.networkManager?.closeChannel(TextComponentString(""))
-            mc.loadWorld(null as WorldClient?)
-
-            mc.displayGuiScreen(LambdaGuiDisconnected(arrayOf(reason), this.getScreen, true, LocalTime.now()))
-        } catch (e: Exception) {
-            e.message?.let { Debug.error("Could not log out", it) }
-            e.printStackTrace()
-        }
-    }
-
     override fun close(): Boolean {
         try {
             this.socket.close()
@@ -145,6 +106,4 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
         return true
     }
 
-    override val SafeClientEvent.getScreen: GuiScreen
-        get() = if(mc.isIntegratedServerRunning) GuiMainMenu() else GuiMultiplayer(GuiMainMenu())
 }

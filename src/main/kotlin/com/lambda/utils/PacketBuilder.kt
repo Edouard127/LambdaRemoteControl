@@ -3,13 +3,13 @@ package com.lambda.utils
 import com.lambda.enums.EPacket
 import com.lambda.interfaces.IPacketBuilder
 
-class PacketBuilder(val packet: EPacket, val data: PacketDataBuilder) : IPacketBuilder {
+class PacketBuilder(val packet: EPacket, val data: ByteArray) : IPacketBuilder {
     override fun buildPacket(): Packet {
-        return Packet(packet.byte, PacketDataBuilder(packet, data.data).data)
+        return Packet(packet.byte, data.size, this)
     }
 
     override fun getString(): String {
-        return String(data.data)
+        return String(data)
     }
 
 }

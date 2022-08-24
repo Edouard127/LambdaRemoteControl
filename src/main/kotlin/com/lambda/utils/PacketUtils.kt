@@ -1,6 +1,5 @@
 package com.lambda.utils
 
-import com.lambda.enums.EFlagType
 import com.lambda.enums.EPacket
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -26,9 +25,8 @@ object PacketUtils {
     fun getPacketId(data: Byte): EPacket {
         return EPacket.values()[data.toInt()]
     }
-    fun getPacketBuilder(type: EPacket, flag: EFlagType, vararg data: ByteArray): PacketDataBuilder {
-        /* TODO: add support for multiple data types */
-        return PacketDataBuilder(type, arrByteArrayToByteArray(data as Array<ByteArray>))
+    fun getPacketBuilder(type: EPacket, vararg data: ByteArray): PacketBuilder {
+        return PacketBuilder(type, arrByteArrayToByteArray(data as Array<ByteArray>))
     }
     fun getPacket(byte: Byte, data: ByteArray): Packet {
         Debug.blue("Packet Size:", data.size.toString())
@@ -36,7 +34,7 @@ object PacketUtils {
 
         val type = getPacketId(byte)
 
-        return Packet(type.byte, data)
+        return Packet(type.byte, data.size, getPacketBuilder(type, data))
     }
     fun arrByteArrayToByteArray(arr: Array<ByteArray>): ByteArray {
         val baos = ByteArrayOutputStream()

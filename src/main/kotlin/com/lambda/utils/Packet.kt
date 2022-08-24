@@ -4,7 +4,7 @@ import com.lambda.enums.EFlagType
 import com.lambda.enums.EPacket
 import com.lambda.interfaces.IPacket
 
-class Packet(val byte: Int, val args: ByteArray) : IPacket {
+class Packet(val byte: Int, val length: Int, val args: PacketBuilder) : IPacket {
     override fun getPacket(): EPacket {
         return mapOf(
             0 to EPacket.EXIT,
@@ -49,7 +49,11 @@ class Packet(val byte: Int, val args: ByteArray) : IPacket {
     }
 
     override fun getData(): ByteArray {
-        return args
+        return args.data
+    }
+
+    override fun getString(): String {
+        return "$length ${getPacket().byte} ${getFlags().byte} ${args.getString()}"
     }
 
 

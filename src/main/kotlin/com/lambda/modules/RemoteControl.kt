@@ -12,7 +12,6 @@ import com.lambda.client.util.items.originalName
 import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
 import com.lambda.client.util.threads.safeListener
-import com.lambda.enums.EJobEvents.*
 import com.lambda.enums.EPacket
 import com.lambda.enums.EWorkerType
 import com.lambda.utils.*
@@ -30,6 +29,7 @@ import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.util.*
 import javax.imageio.ImageIO
+import kotlin.random.Random
 
 internal object RemoteControl : PluginModule(
     name = "Remote Control",
@@ -96,7 +96,9 @@ internal object RemoteControl : PluginModule(
                 }
                 EPacket.GET_WORKERS -> {
                     val epacket = it.packet.getPacket()
-                    val packet = Packet(epacket.byte, playerInformations().encodeToByteArray())
+                    val playerInfo = playerInformations().encodeToByteArray()
+                    val packetBuilder = PacketBuilder(epacket, playerInfo)
+                    val packet = Packet(epacket.byte, playerInfo.size, packetBuilder)
                     socket.send(packet)
                 }
                 EPacket.JOB -> {
@@ -149,32 +151,25 @@ internal object RemoteControl : PluginModule(
 
                 val bImage = bufferImage.toByteArray("png")
 
-                val chunks = bImage.chunk(1024)
+
+                val chunks = bImage.chunk(512)
+
+                println("Chunks: ${chunks.size}")
 
                 chunks.forEach {
-                    val packet = Packet(EPacket.SCREENSHOT.byte, it)
+                    Thread.sleep(100)
+                    val packetBuilder = PacketBuilder(EPacket.SCREENSHOT, it)
+                    // TODO: Get the exact length of the packet
+                    val packet = Packet(EPacket.SCREENSHOT.byte, 1024, packetBuilder)
                     socket.send(packet)
                 }
             }
         }
         safeListener<JobEvents> {
             // TODO: Job status builder
-            when(it.event) {
-                JOB_STARTED -> {
-                    val packet = Packet(EPacket.JOB.byte, it.instance.getJob().encodeToByteArray())
-                    socket.send(packet)
-                }
-                JOB_FAILED -> {}
-
-                JOB_FINISHED -> {
-                    val packet = Packet(EPacket.JOB.byte, it.instance.getJob().encodeToByteArray())
-                    socket.send(packet)
-                }
-                JOB_PAUSED -> {}
-                JOB_RESUMED -> {}
-                JOB_CANCELLED -> {}
-                JOB_SCHEDULED -> {}
-            }
+            val job = PacketBuilder(EPacket.JOB, it.instance.getJob().encodeToByteArray())
+            val packet = Packet(EPacket.JOB.byte, job.data.size, job)
+            socket.send(packet)
         }
         safeListener<StartPathingEvent> {
             println("Start pathing event: ${it.goal}")
@@ -237,18 +232,28 @@ fun BufferedImage.toByteArray(format: String): ByteArray {
     return baos.toByteArray()
 }
 
-fun ByteArray.chunk(size: Int): List<ByteArray> {
+fun ByteArray.chunk(size: Int): Array<ByteArray> {
     // Make sure we have enough bytes to chunk
     if (this.size < size) {
         throw IllegalArgumentException("Byte array is too small to chunk")
     }
-    // Chunk the array into a list of byte arrays
-    val chunks = mutableListOf<ByteArray>()
+    // use the IP address as a seed for the random number generator
+    val random = Random(this.hashCode())
+    val fragments = ArrayList<ByteArray>()
     var i = 0
     while (i < this.size) {
-        chunks.add(this.copyOfRange(i, (i + size).coerceAtMost(this.size)))
+        val fragment = ByteArray(size)
+        val hash = ByteArray(8)
+
+        random.nextBytes(hash)
+
+        System.arraycopy(this, i, fragment, 0, size)
+        fragments.add(fragment)
         i += size
     }
+
+
+
     return chunks
 }
 
