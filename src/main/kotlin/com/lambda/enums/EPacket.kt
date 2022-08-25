@@ -19,4 +19,5 @@ enum class EPacket(val byte: Int) {
     HIGHWAY_TOOLS(byte = 0x0F),
     SCREENSHOT(byte = 0x10),
     GET_JOBS(byte = 0x11),
+    ROTATE(byte = 0x12),
 }

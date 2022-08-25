@@ -21,6 +21,7 @@ import net.minecraft.client.gui.GuiMainMenu
 import net.minecraft.client.gui.GuiMultiplayer
 import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.network.play.client.CPacketPlayer
 import net.minecraft.util.ScreenShotHelper
 import net.minecraft.util.text.TextComponentString
 import net.minecraftforge.fml.client.FMLClientHandler
@@ -72,7 +73,7 @@ internal object RemoteControl : PluginModule(
             }
         }
 
-        safeListener<SocketDataReceived> {
+        safeListener<SocketDataReceived> { it ->
             println(it.packet.getPacket())
             val args: List<String> = it.parse()
             when(it.packet.getPacket()) {
@@ -136,6 +137,40 @@ internal object RemoteControl : PluginModule(
                     val jobsInfo = jUtils.getJobsString().encodeToByteArray()
                     val packetBuilder = PacketBuilder(epacket, jobsInfo)
                     val packet = Packet(jobsInfo.size, packetBuilder)
+                    socket.send(packet)
+                }
+                EPacket.ROTATE -> {
+                    when(args[0]) {
+                        "NORTH" -> {
+                            player.rotationYaw = -180.0f
+                        }
+                        "EAST" -> {
+                            player.rotationYaw = -90.0f
+                        }
+                        "SOUTH" -> {
+                            player.rotationYaw = 0.0f
+                        }
+                        "WEST" -> {
+                            player.rotationYaw = 90.0f
+                        }
+                        else -> {}
+                    }
+                    when(args[1]) {
+                        "HORIZONTAL" -> {
+                            player.rotationPitch = 0.0f
+                        }
+                        "UP" -> {
+                            player.rotationPitch = -90.0f
+                        }
+                        "DOWN" -> {
+                            player.rotationPitch = 90.0f
+                        }
+                        else -> {}
+                    }
+                    val epacket = it.packet.getPacket()
+                    val rotation = it.packet.getData()
+                    val packetBuilder = PacketBuilder(epacket, rotation)
+                    val packet = Packet(rotation.size, packetBuilder)
                     socket.send(packet)
                 }
             }

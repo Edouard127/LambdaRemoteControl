@@ -36,6 +36,7 @@ open class Packet(val length: Int, val builder: PacketBuilder) : IPacket {
             EPacket.HIGHWAY_TOOLS -> EFlagType.CLIENT
             EPacket.SCREENSHOT -> EFlagType.CLIENT
             EPacket.GET_JOBS -> EFlagType.CLIENT
+            EPacket.ROTATE -> EFlagType.CLIENT
         }
     }
 
