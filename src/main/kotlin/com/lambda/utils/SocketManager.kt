@@ -50,7 +50,7 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
                         println(input)
                         val byte = input[2].toByte()
 
-                        val body = input.subList(5, input.size-1).joinToString(" ").encodeToByteArray()
+                        val body = input.subList(6, input.size-1).joinToString(" ").encodeToByteArray()
 
                         val packet = PacketUtils.getPacket(byte, body)
                         this.receive(packet)
