@@ -35,6 +35,7 @@ open class Packet(val length: Int, val builder: PacketBuilder) : IPacket {
             EPacket.LISTENER_REMOVE -> EFlagType.SERVER
             EPacket.HIGHWAY_TOOLS -> EFlagType.CLIENT
             EPacket.SCREENSHOT -> EFlagType.CLIENT
+            EPacket.GET_JOBS -> EFlagType.CLIENT
         }
     }
 
@@ -43,10 +44,10 @@ open class Packet(val length: Int, val builder: PacketBuilder) : IPacket {
     }
 
     override fun getPacketLength(): Int {
-        return "$length 1 ${getPacket().byte} ${getFlags().byte}".length
+        return "${builder.data.size} 0 ${getPacket().byte} ${getFlags().byte}".encodeToByteArray().size
     }
     override fun getString(): String {
-        return "$length 0 ${getPacket().byte} ${getFlags().byte} ${builder.getString()}"
+        return "${builder.data.size} 0 ${getPacket().byte} ${getFlags().byte} ${builder.getString()}"
     }
 }
 

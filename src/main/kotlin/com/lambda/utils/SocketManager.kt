@@ -45,10 +45,12 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
                 while(true) {
                     val line = this.breader.readLine()
                     if (line != null && line.isNotEmpty()) {
-                        val input = line.split(" ")
+                        // Remove null bytes
+                        val input = line.replace("\u0000", "").split(" ")
+                        println(input)
                         val byte = input[2].toByte()
 
-                        val body = input.subList(4, input.size-1).joinToString(" ").encodeToByteArray()
+                        val body = input.subList(5, input.size-1).joinToString(" ").encodeToByteArray()
 
                         val packet = PacketUtils.getPacket(byte, body)
                         this.receive(packet)
@@ -85,13 +87,15 @@ class SocketManager(server: String, port: Int, username: String, password: Strin
         try {
             when (packet) {
                 is Packet -> {
-                    println(packet.getString())
+                    //println("Sending packet")
+                    //println(packet.getString().length)
                     this.bwriter.write(packet.getString())
                     this.bwriter.newLine()
                     this.bwriter.flush()
                 }
                 is FragmentedPacket -> {
-                    println(packet.getString())
+                    //println("Sending fragmented packet")
+                    //println(packet.getString().length)
                     this.bwriter.write(packet.getString())
                     this.bwriter.newLine()
                     this.bwriter.flush()

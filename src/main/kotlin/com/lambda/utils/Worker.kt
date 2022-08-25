@@ -10,6 +10,7 @@ abstract class Worker {
 
     abstract var cancelled: Boolean
     abstract var finished: Boolean
+    abstract var working: Boolean
 
     abstract fun emitEvent(event: EJobEvents)
     abstract fun getJob(): String

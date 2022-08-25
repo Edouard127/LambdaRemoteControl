@@ -109,7 +109,13 @@ internal object RemoteControl : PluginModule(
                     MessageSendHelper.sendServerMessage(args.joinToString(" "))
                 }
                 EPacket.BARITONE -> {
-                    MessageSendHelper.sendBaritoneCommand(args.joinToString(" "))
+                    if (jUtils.currentJob() == null) {
+                        MessageSendHelper.sendBaritoneCommand(args.joinToString(" "))
+                    }
+                    else {
+                        MessageSendHelper.sendBaritoneCommand(args.joinToString(" "))
+                        MessageSendHelper.sendBaritoneCommand("stop")
+                    }
                 }
                 EPacket.LAMBDA -> {
                     CommandManager.runCommand(args.joinToString(" "))
@@ -125,6 +131,13 @@ internal object RemoteControl : PluginModule(
                     CommandManager.runCommand("set highwayTools ${hwt.getPacket().string} ${hwt.getArguments().joinToString(" ")}")
                 }
                 EPacket.SCREENSHOT -> getScreenShot = true
+                EPacket.GET_JOBS -> {
+                    val epacket = it.packet.getPacket()
+                    val jobsInfo = jUtils.getJobsString().encodeToByteArray()
+                    val packetBuilder = PacketBuilder(epacket, jobsInfo)
+                    val packet = Packet(jobsInfo.size, packetBuilder)
+                    socket.send(packet)
+                }
             }
         }
         safeListener<TickEvent.ClientTickEvent> {
@@ -152,8 +165,12 @@ internal object RemoteControl : PluginModule(
 
                 val bImage = bufferImage.toByteArray("png")
 
+                val packetBuilder = PacketBuilder(EPacket.SCREENSHOT, bImage)
+                val packet = Packet(bImage.size, packetBuilder)
+                socket.send(packet)
+
                 // TODO: Find better way to get the length of the free memory
-                val pLength = PacketBuilder(EPacket.SCREENSHOT, byteArrayOf()).buildPacket().getPacketLength()
+                /*val pLength = PacketBuilder(EPacket.SCREENSHOT, byteArrayOf()).buildPacket().getPacketLength()
 
                 val size = 1024-pLength
 
@@ -168,7 +185,7 @@ internal object RemoteControl : PluginModule(
                     Fragment(
                     fragment = bytes,
                     offset = fragmentOffsets.sum(),
-                    length = bytes.size,
+                    length = size,
                     hash = hashCode,
                     sum = chunks.sumOf { it.size }
                 ) }
@@ -177,13 +194,13 @@ internal object RemoteControl : PluginModule(
                 println("Chunks: ${chunks.size}")
 
                 chunks.forEach {
-                    println(pLength+size)
                     val packetBuilder = PacketBuilder(EPacket.SCREENSHOT, it)
                     // TODO: Get the exact length of the packet
                     val packet = Packet(pLength+size, packetBuilder)
                     val fragmentPacket = FragmentedPacket(packet, chunkFragments)
+                    println(fragmentPacket.getPacketLength()+size)
                     socket.send(fragmentPacket)
-                }
+                }*/
             }
         }
         safeListener<JobEvents> {
@@ -265,7 +282,8 @@ fun ByteArray.chunk(size: Int): ArrayList<ByteArray> {
     for (i in 0 until nFragments.toInt()) {
         val fragment = ByteArray(size)
         val remaining = this.size - i * size
-        val bytes = if (remaining > size) size else remaining
+        val bytes = if (remaining < size) remaining else size
+
         // println("Remaining: $remaining Bytes: $bytes")
         try {
             System.arraycopy(this, i * bytes, fragment, 0, bytes)
@@ -283,6 +301,7 @@ fun ByteArray.chunk(size: Int): ArrayList<ByteArray> {
     }
     return fragments
 }
+
 
 
 enum class GameState {

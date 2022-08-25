@@ -27,6 +27,10 @@ class JobUtils(private val jobs: MutableList<Job> = mutableListOf()) {
         }
     }
     fun currentJob(): Job? = jobs.firstOrNull()
+
+    fun getJobs(): List<Job> = jobs
+
+    fun getJobsString(): String = jobs.joinToString { it.getJob() } + "\n"
     fun finishJob() {
         currentJob()?.run {
             this.finished = true
@@ -40,6 +44,9 @@ class JobUtils(private val jobs: MutableList<Job> = mutableListOf()) {
     }
     fun removeJob(job: Job) {
         jobs.remove(job)
+    }
+    fun remoteJob(job: Int) {
+        jobs.removeAt(job)
     }
     fun cancelJob(job: Job) {
         jobs.remove(job)
