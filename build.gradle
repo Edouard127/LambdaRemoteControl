@@ -56,7 +56,7 @@ minecraft {
     }
 }
 
-configurations {
+configurations { 
     jarLibs
     // Force choosing the correct nightly build because Mac OS chooses an invalid one
     all {
