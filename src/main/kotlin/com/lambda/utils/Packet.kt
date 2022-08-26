@@ -25,7 +25,7 @@ open class Packet(val length: Int, val builder: PacketBuilder) : IPacket {
             EPacket.LOGOUT -> EFlagType.SERVER
             EPacket.ADD_WORKER -> EFlagType.SERVER
             EPacket.REMOVE_WORKER -> EFlagType.SERVER
-            EPacket.GET_WORKERS -> EFlagType.CLIENT
+            EPacket.INFORMATIONS -> EFlagType.CLIENT
             EPacket.JOB -> EFlagType.CLIENT
             EPacket.CHAT -> EFlagType.CLIENT
             EPacket.BARITONE -> EFlagType.CLIENT

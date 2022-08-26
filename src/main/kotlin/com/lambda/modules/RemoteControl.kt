@@ -96,7 +96,7 @@ internal object RemoteControl : PluginModule(
                     //removeWorker(args.joinToString { it })
                     // TODO: Remove worker to friendly list
                 }
-                EPacket.GET_WORKERS -> {
+                EPacket.INFORMATIONS -> {
                     val epacket = it.packet.getPacket()
                     val playerInfo = playerInformations().encodeToByteArray()
                     val packetBuilder = PacketBuilder(epacket, playerInfo)
@@ -284,18 +284,28 @@ private fun getScreen() = if (mc.isIntegratedServerRunning) {
     GuiMultiplayer(GuiMainMenu())
 }
 
-fun SafeClientEvent.playerInformations(): String = "Player:${mc.player.name} Health:${mc.player.health} Food:${mc.player.foodStats.foodLevel} PlayersRender:${mc.world.playerEntities.size} Coordinates:${mc.player.position} MainHand:${mc.player.heldItemMainhand.originalName} OffHand:${mc.player.heldItemOffhand.originalName} ${armorInformations()}"
-fun SafeClientEvent.armorInformations(): String {
-    val s = StringBuilder()
-    s.append("Armor: ")
-    for (itemStack in mc.player.armorInventoryList.reversed()) {
-        if (itemStack.isEmpty) continue
-        val dura = itemStack.maxDamage - itemStack.itemDamage
-        val duraMultiplier = dura / itemStack.maxDamage.toFloat()
-        val duraPercent = MathUtils.round(duraMultiplier * 100.0f, 1).toFloat()
-        s.append("${itemStack.originalName}:$duraPercent% ")
+fun SafeClientEvent.playerInformations(): String =
+                "Player:${mc.player.name} " +
+                "Health:${mc.player.health} " +
+                "Food:${mc.player.foodStats.foodLevel} " +
+                "PlayersRender:${mc.world.playerEntities.size} " +
+                "Coordinates:${mc.player.position} " +
+                "MainHand:${mc.player.heldItemMainhand.originalName} " +
+                "OffHand:${mc.player.heldItemOffhand.originalName} "+
+                if(player.isSprinting) "Sprinting " else "" +
+                if(mc.player.isSneaking) "Sneaking " else ""+
+                inventory()+
+                if(hasArmor()) armorInformations() else ""+
+                serverData()
+fun SafeClientEvent.armorInformations(): String = mc.player.armorInventoryList.reversed().joinToString(" ") { "${it.originalName}:${MathUtils.round((it.maxDamage - it.itemDamage) / it.maxDamage.toFloat() * 100.0f, 1).toFloat()}" }
+fun SafeClientEvent.hasArmor(): Boolean = mc.player.armorInventoryList.any { !it.isEmpty }
+fun SafeClientEvent.inventory(): String = "Inventory "+player.inventory.mainInventory.joinToString(separator = " ") { it.originalName }
+fun SafeClientEvent.serverData(): String {
+    player.server?.let {
+        return "Players:${it.playerList.players.size} "+
+                "MaxPlayers:${it.playerList.maxPlayers} "
     }
-    return s.toString()
+    return "No server data"
 }
 
 // convert BufferedImage to byte[]
