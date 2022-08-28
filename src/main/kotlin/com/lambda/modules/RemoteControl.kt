@@ -245,13 +245,11 @@ internal object RemoteControl : PluginModule(
             }
         }
         safeListener<JobEvents> {
-            // TODO: Job status builder
             val job = PacketBuilder(EPacket.JOB, it.instance.getJob().encodeToByteArray())
             val packet = Packet(job.data.size, job)
             socket.send(packet)
         }
         safeListener<StartPathingEvent> {
-            println("Start pathing event: ${it.goal}")
             val job = JobTracker(Job(
                 type = EWorkerType.BARITONE,
                 goal = it.goal,
@@ -260,15 +258,14 @@ internal object RemoteControl : PluginModule(
             jUtils.addJob(job)
         }
         safeListener<StopPathingEvent> {
-            println("Baritone stopped pathing")
             jUtils.currentJob()?.run {
                 this.job.end()
             }
         }
         safeListener<UpdatePathingEvent> {
-            jUtils.currentJob()?.let { jobTracker ->
-                if (jobTracker.isStuck()) {
-                    jobTracker.job.emitEvent(EJobEvents.JOB_STUCK)
+            jUtils.currentJob()?.run {
+                if (this.isStuck()) {
+                    this.job.emitEvent(EJobEvents.JOB_STUCK)
                 }
             }
         }
