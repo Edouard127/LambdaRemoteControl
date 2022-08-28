@@ -7,7 +7,6 @@ import com.lambda.utils.Debug
 internal object SocketPlugin : Plugin() {
 
     override fun onLoad() {
-        Debug.purple("SocketPlugin loaded")
         modules.add(RemoteControl)
     }
 

@@ -3,7 +3,7 @@ package com.lambda.interfaces
 import com.lambda.client.event.SafeClientEvent
 import com.lambda.enums.EWorkerStatus
 import com.lambda.enums.EWorkerType
-import com.lambda.utils.Worker
+import com.lambda.classes.worker.Worker
 import net.minecraft.util.math.BlockPos
 
 

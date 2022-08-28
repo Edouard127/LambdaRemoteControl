@@ -2,6 +2,11 @@ package com.lambda.modules
 
 import baritone.api.utils.Helper.mc
 import com.lambda.SocketPlugin
+import com.lambda.classes.packet.Packet
+import com.lambda.classes.packet.PacketBuilder
+import com.lambda.classes.socket.SocketManager
+import com.lambda.classes.worker.Job
+import com.lambda.classes.worker.utils.JobUtils
 import com.lambda.client.command.CommandManager
 import com.lambda.client.commons.utils.MathUtils
 import com.lambda.client.event.SafeClientEvent
@@ -14,6 +19,7 @@ import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
 import com.lambda.client.util.threads.safeListener
 import com.lambda.enums.EPacket
 import com.lambda.enums.EWorkerType
+import com.lambda.events.*
 import com.lambda.utils.*
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiDisconnected
@@ -21,7 +27,6 @@ import net.minecraft.client.gui.GuiMainMenu
 import net.minecraft.client.gui.GuiMultiplayer
 import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.client.multiplayer.WorldClient
-import net.minecraft.network.play.client.CPacketPlayer
 import net.minecraft.util.ScreenShotHelper
 import net.minecraft.util.text.TextComponentString
 import net.minecraftforge.fml.client.FMLClientHandler
@@ -31,7 +36,6 @@ import java.io.ByteArrayOutputStream
 import java.util.*
 import javax.imageio.ImageIO
 import kotlin.math.ceil
-import kotlin.random.Random
 
 internal object RemoteControl : PluginModule(
     name = "Remote Control",

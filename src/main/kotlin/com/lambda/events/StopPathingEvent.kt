@@ -1,4 +1,4 @@
-package com.lambda.utils
+package com.lambda.events
 
 import com.lambda.client.event.Cancellable
 import com.lambda.client.event.Event

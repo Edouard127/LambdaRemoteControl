@@ -1,6 +1,6 @@
 package com.lambda.interfaces
 
-import com.lambda.utils.Fragment
+import com.lambda.classes.packet.Fragment
 
 interface IFragmentedPacket {
     fun getFragments(): List<Fragment>

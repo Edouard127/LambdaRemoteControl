@@ -1,6 +1,6 @@
 package com.lambda.interfaces
 
-import com.lambda.utils.Packet
+import com.lambda.classes.packet.Packet
 
 interface ISocketManager {
     fun receive(packet: Packet)

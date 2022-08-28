@@ -1,4 +1,4 @@
-package com.lambda.utils
+package com.lambda.events
 
 import baritone.api.utils.BetterBlockPos
 import com.lambda.client.event.Event

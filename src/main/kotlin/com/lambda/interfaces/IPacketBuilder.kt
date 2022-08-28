@@ -1,7 +1,6 @@
 package com.lambda.interfaces
 
-import com.lambda.enums.EPacket
-import com.lambda.utils.Packet
+import com.lambda.classes.packet.Packet
 
 interface IPacketBuilder {
     fun buildPacket(): Packet

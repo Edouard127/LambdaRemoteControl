@@ -1,10 +1,12 @@
 package com.lambda.utils
 
-import baritone.api.utils.BetterBlockPos
 import baritone.api.utils.Helper.mc
 import com.lambda.client.event.LambdaEventBus
 import com.lambda.client.util.BaritoneUtils
 import com.lambda.enums.EWorkerStatus
+import com.lambda.events.StartPathingEvent
+import com.lambda.events.StopPathingEvent
+import com.lambda.events.UpdatePathingEvent
 import net.minecraft.util.math.BlockPos
 
 class BaritoneUtils
