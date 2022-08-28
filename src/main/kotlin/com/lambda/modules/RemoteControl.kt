@@ -22,7 +22,9 @@ import com.lambda.enums.EJobEvents
 import com.lambda.enums.EPacket
 import com.lambda.enums.EWorkerType
 import com.lambda.events.*
-import com.lambda.utils.*
+import com.lambda.utils.BaritoneUtils
+import com.lambda.utils.Debug
+import com.lambda.utils.HighwayToolsHandler
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiDisconnected
 import net.minecraft.client.gui.GuiMainMenu
@@ -33,11 +35,13 @@ import net.minecraft.util.ScreenShotHelper
 import net.minecraft.util.text.TextComponentString
 import net.minecraftforge.fml.client.FMLClientHandler
 import net.minecraftforge.fml.common.gameevent.TickEvent
+import java.awt.Image
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.util.*
 import javax.imageio.ImageIO
 import kotlin.math.ceil
+
 
 internal object RemoteControl : PluginModule(
     name = "Remote Control",
@@ -204,7 +208,10 @@ internal object RemoteControl : PluginModule(
                 val frameBuffer = FMLClientHandler.instance().client.framebuffer
                 val bufferImage = ScreenShotHelper.createScreenshot(width, height, frameBuffer)
 
-                val bImage = bufferImage.toByteArray("png")
+                // Compress buffer image
+
+
+                val bImage = bufferImage.compress(360, 640).toByteArray("png")
 
                 val packetBuilder = PacketBuilder(EPacket.SCREENSHOT, bImage)
                 val packet = Packet(bImage.size, packetBuilder)
@@ -317,6 +324,12 @@ fun SafeClientEvent.serverData(): String {
                 "MaxPlayers:${it.playerList.maxPlayers} "
     }
     return "No server data"
+}
+
+fun BufferedImage.compress(w: Int, h: Int): BufferedImage {
+    val img: BufferedImage = BufferedImage(w, h, BufferedImage.TYPE_INT_RGB)
+    img.graphics.drawImage(this.getScaledInstance(w, h, Image.SCALE_SMOOTH), 0, 0, null)
+    return img
 }
 
 // convert BufferedImage to byte[]
