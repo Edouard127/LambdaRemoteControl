@@ -144,8 +144,6 @@ flycheck_*.el
 .idea/**/gradle.xml
 .idea/**/libraries
 
-# Building
-classes
 
 # Gradle and Maven with auto-import
 # When using Gradle or Maven with auto-import, you should exclude module files,
