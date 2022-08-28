@@ -6,6 +6,7 @@ import com.lambda.classes.packet.Packet
 import com.lambda.classes.packet.PacketBuilder
 import com.lambda.classes.socket.SocketManager
 import com.lambda.classes.worker.Job
+import com.lambda.classes.worker.utils.JobTracker
 import com.lambda.classes.worker.utils.JobUtils
 import com.lambda.client.command.CommandManager
 import com.lambda.client.commons.utils.MathUtils
@@ -17,6 +18,7 @@ import com.lambda.client.util.items.originalName
 import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
 import com.lambda.client.util.threads.safeListener
+import com.lambda.enums.EJobEvents
 import com.lambda.enums.EPacket
 import com.lambda.enums.EWorkerType
 import com.lambda.events.*
@@ -62,9 +64,9 @@ internal object RemoteControl : PluginModule(
     private var gameState = GameState.NONE
     private var serverData: ServerData? = null
     private var getScreenShot = false
+    private var jobTracker: JobTracker? = null
 
     init {
-
         onEnable {
             val parsedInt = port.toInt()
             socket = SocketManager(server, parsedInt, Minecraft.getMinecraft().session.username, s)
@@ -250,18 +252,26 @@ internal object RemoteControl : PluginModule(
         }
         safeListener<StartPathingEvent> {
             println("Start pathing event: ${it.goal}")
-            jUtils.addJob(Job(
+            val job = JobTracker(Job(
                 type = EWorkerType.BARITONE,
                 goal = it.goal,
+                entity = this.player
             ))
+            jUtils.addJob(job)
         }
         safeListener<StopPathingEvent> {
             println("Baritone stopped pathing")
             jUtils.currentJob()?.run {
-                this.end()
+                this.job.end()
             }
         }
-        safeListener<UpdatePathingEvent> {}
+        safeListener<UpdatePathingEvent> {
+            jUtils.currentJob()?.let { jobTracker ->
+                if (jobTracker.isStuck()) {
+                    jobTracker.job.emitEvent(EJobEvents.JOB_STUCK)
+                }
+            }
+        }
     }
 
 }

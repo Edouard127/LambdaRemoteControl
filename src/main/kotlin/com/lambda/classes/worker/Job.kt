@@ -6,11 +6,12 @@ import com.lambda.enums.EJobEvents
 import com.lambda.enums.EWorkerType
 import com.lambda.events.JobEvents
 import com.lambda.utils.BaritoneUtils
+import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.util.math.BlockPos
 
 // Make a class that implements Worker class
 class Job
-    (val type: EWorkerType, val goal: BlockPos)
+    (val type: EWorkerType, val goal: BlockPos, override val entity: EntityPlayerSP)
     : Worker() {
 
 

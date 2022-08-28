@@ -5,19 +5,19 @@ import com.lambda.enums.EJobEvents
 import com.lambda.events.JobEvents
 import com.lambda.classes.worker.Job
 
-class JobUtils(private val jobs: MutableList<Job> = mutableListOf()) {
+class JobUtils(private val jobs: MutableList<JobTracker> = mutableListOf()) {
 
-    var jobEvent: Job? = null
+    private var jobEvent: JobTracker? = null
     fun checkJobs() {
         if (jobs.isNotEmpty()) {
             jobs.firstOrNull().run {
                 if (this != null) {
                     if (jobEvent != this) {
                         jobEvent = this
-                        LambdaEventBus.post(JobEvents(event = EJobEvents.JOB_STARTED, instance = this))
+                        LambdaEventBus.post(JobEvents(event = EJobEvents.JOB_STARTED, instance = this.job))
                     }
-                    if (this.finished) {
-                        LambdaEventBus.post(JobEvents(event = EJobEvents.JOB_FINISHED, instance = this))
+                    if (this.job.finished) {
+                        LambdaEventBus.post(JobEvents(event = EJobEvents.JOB_FINISHED, instance = this.job))
                         jobs.remove(this)
                         jobEvent = null
                     }
@@ -28,37 +28,9 @@ class JobUtils(private val jobs: MutableList<Job> = mutableListOf()) {
             }
         }
     }
-    fun currentJob(): Job? = jobs.firstOrNull()
-
-    fun getJobs(): List<Job> = jobs
-
-    fun getJobsString(): String = jobs.joinToString { it.getJob() } + "\n"
-    fun finishJob() {
-        currentJob()?.run {
-            this.finished = true
-        }
-    }
-    fun executeJob(job: Job) {
-        job.emitEvent(EJobEvents.JOB_STARTED)
-    }
-    fun addJob(job: Job) {
+    fun currentJob(): JobTracker? = jobs.firstOrNull()
+    fun getJobsString(): String = jobs.joinToString { it.job.getJob() } + "\n"
+    fun addJob(job: JobTracker) {
         jobs.add(job)
-    }
-    fun removeJob(job: Job) {
-        jobs.remove(job)
-    }
-    fun remoteJob(job: Int) {
-        jobs.removeAt(job)
-    }
-    fun cancelJob(job: Job) {
-        jobs.remove(job)
-        job.emitEvent(EJobEvents.JOB_CANCELLED)
-        //job.cancel()
-    }
-    fun cancelAllJobs() {
-        jobs.forEach { it.cancel() }
-    }
-    fun cancelAllJobsExcept(job: Job) {
-        jobs.forEach { if (it != job) it.cancel() }
     }
 }
