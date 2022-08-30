@@ -2,6 +2,8 @@ package com.lambda.modules
 
 import baritone.api.utils.Helper.mc
 import com.lambda.SocketPlugin
+import com.lambda.classes.packet.Fragment
+import com.lambda.classes.packet.FragmentedPacket
 import com.lambda.classes.packet.Packet
 import com.lambda.classes.packet.PacketBuilder
 import com.lambda.classes.socket.SocketManager
@@ -213,12 +215,9 @@ internal object RemoteControl : PluginModule(
 
                 val bImage = bufferImage.compress(360, 640).toByteArray("png")
 
-                val packetBuilder = PacketBuilder(EPacket.SCREENSHOT, bImage)
-                val packet = Packet(bImage.size, packetBuilder)
-                socket.send(packet)
 
                 // TODO: Find better way to get the length of the free memory
-                /*val pLength = PacketBuilder(EPacket.SCREENSHOT, byteArrayOf()).buildPacket().getPacketLength()
+                val pLength = PacketBuilder(EPacket.SCREENSHOT, byteArrayOf()).buildPacket().getPacketLength()
 
                 val size = 1024-pLength
 
@@ -246,9 +245,8 @@ internal object RemoteControl : PluginModule(
                     // TODO: Get the exact length of the packet
                     val packet = Packet(pLength+size, packetBuilder)
                     val fragmentPacket = FragmentedPacket(packet, chunkFragments)
-                    println(fragmentPacket.getPacketLength()+size)
                     socket.send(fragmentPacket)
-                }*/
+                }
             }
         }
         safeListener<JobEvents> {
