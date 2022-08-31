@@ -108,7 +108,7 @@ internal object RemoteControl : PluginModule(
                     //removeWorker(args.joinToString { it })
                     // TODO: Remove worker to friendly list
                 }
-                EPacket.INFORMATIONS -> {
+                EPacket.INFORMATION -> {
                     val epacket = it.packet.getPacket()
                     val playerInfo = playerInformations().encodeToByteArray()
                     val packetBuilder = PacketBuilder(epacket, playerInfo)
