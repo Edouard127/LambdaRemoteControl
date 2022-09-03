@@ -12,22 +12,18 @@ import com.lambda.classes.worker.utils.JobTracker
 import com.lambda.classes.worker.utils.JobUtils
 import com.lambda.client.command.CommandManager
 import com.lambda.client.commons.utils.MathUtils
+import com.lambda.client.event.LambdaEventBus
 import com.lambda.client.event.SafeClientEvent
 import com.lambda.client.event.listener.listener
-import com.lambda.client.manager.managers.FriendManager
 import com.lambda.client.module.Category
-import com.lambda.client.module.modules.combat.AutoLog
-import com.lambda.client.module.modules.combat.AutoLog.log
 import com.lambda.client.plugin.api.PluginModule
 import com.lambda.client.util.EntityUtils.isFakeOrSelf
 import com.lambda.client.util.items.originalName
 import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
+import com.lambda.client.util.threads.onMainThread
 import com.lambda.client.util.threads.safeListener
-import com.lambda.enums.EJobEvents
-import com.lambda.enums.EPacket
-import com.lambda.enums.EWorkerStatus
-import com.lambda.enums.EWorkerType
+import com.lambda.enums.*
 import com.lambda.events.*
 import com.lambda.utils.*
 import net.minecraft.client.Minecraft
@@ -73,10 +69,6 @@ internal object RemoteControl : PluginModule(
     private val bUtils = BaritoneUtils()
     private val rUtils = RotationUtils()
     private val fUtils = FriendUtils()
-    private var gameState = GameState.NONE
-    private var serverData: ServerData? = null
-    private var getScreenShot = false
-    private var jobTracker: JobTracker? = null
 
     init {
         onEnable {
@@ -100,12 +92,8 @@ internal object RemoteControl : PluginModule(
                 EPacket.HEARTBEAT -> {
                     Debug.log("Heartbeat")
                 }
-                EPacket.LOGIN -> {
-                    Debug.log(args.joinToString(" "))
-                    serverData = ServerData(args[0], args[1], args[2].toBooleanStrict())
-                    gameState = GameState.LOGIN
-                }
-                EPacket.LOGOUT -> gameState = GameState.LOGOUT
+                EPacket.LOGIN -> LambdaEventBus.post(MainThreadEvents(Login(ServerData(args[0], args[1], args[2].toBooleanStrict()))))
+                EPacket.LOGOUT -> LambdaEventBus.post(MainThreadEvents(Logout("Client received logout packet")))
                 EPacket.ADD_WORKER -> {
                     //addWorker(args.joinToString { it })
                     // TODO: Add worker to friendly list
@@ -147,7 +135,7 @@ internal object RemoteControl : PluginModule(
                     val hwt = HighwayToolsHandler(it.parseByteArray())
                     CommandManager.runCommand("set highwayTools ${hwt.getPacket().string} ${hwt.getArguments().joinToString(" ")}")
                 }
-                EPacket.SCREENSHOT -> getScreenShot = true
+                EPacket.SCREENSHOT -> LambdaEventBus.post(MainThreadEvents(Screenshot()))
                 EPacket.GET_JOBS -> {
                     val epacket = it.packet.getPacket()
                     val jobsInfo = jUtils.getJobsString().encodeToByteArray()
@@ -176,64 +164,58 @@ internal object RemoteControl : PluginModule(
                 if (entity !is EntityPlayer) continue
                 if (entity.isFakeOrSelf) continue
                 if (!fUtils.isFriend(entity)) continue
-                gameState = GameState.LOGOUT
+                LambdaEventBus.post(MainThreadEvents(Logout("Player ${entity.name} is in your render distance")))
             }
         }
-        listener<TickEvent.ClientTickEvent> {
-            when (gameState) {
-                GameState.LOGIN -> {
-                    serverData?.serverIP?.let { ServerData(serverData!!.serverName, it, false) }?.let { login(it) }
-                    gameState = GameState.NONE
-                }
-                GameState.LOGOUT -> {
-                    logout("Client sent logout packet")
-                    gameState = GameState.NONE
-                }
-                GameState.NONE -> {}
-            }
-            if (getScreenShot) {
-                getScreenShot = false
-                val width = FMLClientHandler.instance().client.displayWidth
-                val height = FMLClientHandler.instance().client.displayHeight
-                val frameBuffer = FMLClientHandler.instance().client.framebuffer
-                val bufferImage = ScreenShotHelper.createScreenshot(width, height, frameBuffer)
+        // TODO: Clone classes from the other thread
+        listener<MainThreadEvents> { threadEvents ->
+            if (threadEvents.instance is Login || threadEvents.instance is Logout || threadEvents.instance is Screenshot) {
+                when (threadEvents.instance) {
+                    is Login -> {
+                        val instanced = threadEvents.instance.javaClass.newInstance()
+                        login(instanced.server)
+                    }
 
-                // Compress buffer image
+                    is Logout -> {
+                        val instanced = threadEvents.instance.javaClass.newInstance()
+                        logout(instanced.reason)
+                    }
 
+                    is Screenshot -> {
 
-                val bImage = bufferImage.compress(360, 640).toByteArray("png")
+                        val width = FMLClientHandler.instance().client.displayWidth
+                        val height = FMLClientHandler.instance().client.displayHeight
+                        val frameBuffer = FMLClientHandler.instance().client.framebuffer
+                        val bufferImage = ScreenShotHelper.createScreenshot(width, height, frameBuffer)
 
+                        val bImage = bufferImage.compress(360, 640).toByteArray("png")
+                        // TODO: Find better way to get the length of the free memory
+                        val pLength = PacketBuilder(EPacket.SCREENSHOT, byteArrayOf()).buildPacket().getPacketLength()
+                        val size = 1024 - pLength
+                        val chunks = bImage.chunk(size)
+                        val fragmentOffsets = List(chunks.size) { i ->
+                            i * size
+                        }
 
-                // TODO: Find better way to get the length of the free memory
-                val pLength = PacketBuilder(EPacket.SCREENSHOT, byteArrayOf()).buildPacket().getPacketLength()
+                        val hashCode = bImage.hashCode()
+                        val chunkFragments = chunks.map { bytes ->
+                            Fragment(
+                                fragment = bytes,
+                                offset = fragmentOffsets.sum(),
+                                length = size,
+                                hash = hashCode,
+                                sum = chunks.sumOf { it.size }
+                            )
+                        }
 
-                val size = 1024-pLength
-
-
-                val chunks = bImage.chunk(size)
-
-                val fragmentOffsets = List(chunks.size) { i ->
-                    i * size
-                }
-                val hashCode = bImage.hashCode()
-                val chunkFragments = chunks.map { bytes ->
-                    Fragment(
-                    fragment = bytes,
-                    offset = fragmentOffsets.sum(),
-                    length = size,
-                    hash = hashCode,
-                    sum = chunks.sumOf { it.size }
-                ) }
-
-
-                println("Chunks: ${chunks.size}")
-
-                chunks.forEach {
-                    val packetBuilder = PacketBuilder(EPacket.SCREENSHOT, it)
-                    // TODO: Get the exact length of the packet
-                    val packet = Packet(pLength+size, packetBuilder)
-                    val fragmentPacket = FragmentedPacket(packet, chunkFragments)
-                    socket.send(fragmentPacket)
+                        chunks.forEach {
+                            val packetBuilder = PacketBuilder(EPacket.SCREENSHOT, it)
+                            // TODO: Get the exact length of the packet
+                            val packet = Packet(pLength + size, packetBuilder)
+                            val fragmentPacket = FragmentedPacket(packet, chunkFragments)
+                            socket.send(fragmentPacket)
+                        }
+                    }
                 }
             }
         }
@@ -371,8 +353,3 @@ fun ByteArray.chunk(size: Int): ArrayList<ByteArray> {
 
 
 
-enum class GameState {
-    LOGIN,
-    LOGOUT,
-    NONE
-}
