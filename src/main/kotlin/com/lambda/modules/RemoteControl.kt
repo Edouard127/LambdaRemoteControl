@@ -84,7 +84,7 @@ internal object RemoteControl : PluginModule(
             }
         }
 
-        safeListener<SocketDataReceived> { it ->
+        safeListener<SocketDataReceived> {
             println(it.packet.getPacket())
             val args: List<String> = it.parse()
             when(it.packet.getPacket()) {
