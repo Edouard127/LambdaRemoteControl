@@ -233,11 +233,11 @@ internal object RemoteControl : PluginModule(
 
         safeListener<JobEvents> {
             if (it.instance is Job) {
-                    val epacket = EPacket.JOB
-                    val jobInfo = it.instance.getJob().encodeToByteArray()
-                    val packetBuilder = PacketBuilder(epacket, jobInfo)
-                    val packet = Packet(jobInfo.size, packetBuilder)
-                    socket.send(packet)
+                val epacket = EPacket.JOB
+                val jobInfo = it.instance.getJob().encodeToByteArray()
+                val packetBuilder = PacketBuilder(epacket, jobInfo)
+                val packet = Packet(jobInfo.size, packetBuilder)
+                socket.send(packet)
             }
             // TODO: Make this better
             if (it.instance == null) {
