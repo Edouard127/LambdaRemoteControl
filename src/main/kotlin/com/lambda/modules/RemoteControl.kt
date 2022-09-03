@@ -123,11 +123,8 @@ internal object RemoteControl : PluginModule(
                     MessageSendHelper.sendServerMessage(args.joinToString(" "))
                 }
                 EPacket.BARITONE -> {
-                    jUtils.currentJob()?.run {
-                        // TODO: hacky fix for baritone
-                    } ?: run {
-                        MessageSendHelper.sendBaritoneCommand(args.joinToString(" "))
-                    }
+                    if (args.joinToString(" ").contains("stop")) MessageSendHelper.sendBaritoneCommand("stop")
+                    bUtils.queueCommand(args.joinToString(" "))
                 }
                 EPacket.LAMBDA -> {
                     CommandManager.runCommand(args.joinToString(" "))
@@ -166,6 +163,7 @@ internal object RemoteControl : PluginModule(
         safeListener<TickEvent.ClientTickEvent> {
             jUtils.checkJobs()
             bUtils.pathingGoalCheck()
+            bUtils.commandQueueCheck()
             // TODO: Worker settings
             for (entity in world.loadedEntityList) {
                 if (entity !is EntityPlayer) continue
