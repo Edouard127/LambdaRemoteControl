@@ -22,11 +22,13 @@ import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
 import com.lambda.client.util.threads.safeListener
 import com.lambda.enums.EJobEvents
 import com.lambda.enums.EPacket
+import com.lambda.enums.EWorkerStatus
 import com.lambda.enums.EWorkerType
 import com.lambda.events.*
 import com.lambda.utils.BaritoneUtils
 import com.lambda.utils.Debug
 import com.lambda.utils.HighwayToolsHandler
+import com.lambda.utils.RotationUtils
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiDisconnected
 import net.minecraft.client.gui.GuiMainMenu
@@ -67,6 +69,7 @@ internal object RemoteControl : PluginModule(
     private lateinit var socket: SocketManager
     private val jUtils = JobUtils()
     private val bUtils = BaritoneUtils()
+    private val rUtils = RotationUtils()
     private var gameState = GameState.NONE
     private var serverData: ServerData? = null
     private var getScreenShot = false
@@ -152,33 +155,10 @@ internal object RemoteControl : PluginModule(
                     socket.send(packet)
                 }
                 EPacket.ROTATE -> {
-                    when(args[0]) {
-                        "NORTH" -> {
-                            player.rotationYaw = -180.0f
-                        }
-                        "EAST" -> {
-                            player.rotationYaw = -90.0f
-                        }
-                        "SOUTH" -> {
-                            player.rotationYaw = 0.0f
-                        }
-                        "WEST" -> {
-                            player.rotationYaw = 90.0f
-                        }
-                        else -> {}
-                    }
-                    when(args[1]) {
-                        "HORIZONTAL" -> {
-                            player.rotationPitch = 0.0f
-                        }
-                        "UP" -> {
-                            player.rotationPitch = -90.0f
-                        }
-                        "DOWN" -> {
-                            player.rotationPitch = 90.0f
-                        }
-                        else -> {}
-                    }
+                    val playerRotation = rUtils.getRotation(args[0], args[1])
+                    player.rotationYaw = playerRotation.x
+                    player.rotationPitch = playerRotation.y
+
                     val epacket = it.packet.getPacket()
                     val rotation = it.packet.getData()
                     val packetBuilder = PacketBuilder(epacket, rotation)
@@ -224,7 +204,7 @@ internal object RemoteControl : PluginModule(
 
                 val chunks = bImage.chunk(size)
 
-                val fragmentOffsets = chunks.mapIndexed { i, _ ->
+                val fragmentOffsets = List(chunks.size) { i ->
                     i * size
                 }
                 val hashCode = bImage.hashCode()
@@ -250,9 +230,21 @@ internal object RemoteControl : PluginModule(
             }
         }
         safeListener<JobEvents> {
-            val job = PacketBuilder(EPacket.JOB, it.instance.getJob().encodeToByteArray())
-            val packet = Packet(job.data.size, job)
-            socket.send(packet)
+            if (it.instance is Job) {
+                    val epacket = EPacket.JOB
+                    val jobInfo = it.instance.getJob().encodeToByteArray()
+                    val packetBuilder = PacketBuilder(epacket, jobInfo)
+                    val packet = Packet(jobInfo.size, packetBuilder)
+                    socket.send(packet)
+            }
+            // TODO: Make this better
+            if (it.instance == null) {
+                val epacket = EPacket.JOB
+                val jobInfo = byteArrayOf(EWorkerStatus.IDLE.byte)
+                val packetBuilder = PacketBuilder(epacket, jobInfo)
+                val packet = Packet(jobInfo.size, packetBuilder)
+                socket.send(packet)
+            }
         }
         safeListener<StartPathingEvent> {
             val job = JobTracker(Job(
