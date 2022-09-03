@@ -93,15 +93,21 @@ internal object RemoteControl : PluginModule(
                 EPacket.HEARTBEAT -> {
                     Debug.log("Heartbeat")
                 }
-                EPacket.LOGIN -> LambdaEventBus.post(MainThreadEvents(Login(ServerData(args[0], args[1], args[2].toBooleanStrict()))))
+                EPacket.LOGIN -> {
+                    val server = args.getOrElse(0) { return@safeListener }
+                    val isLAN = args.getOrElse(1) { return@safeListener }.toBooleanStrictOrNull() ?: return@safeListener
+                    LambdaEventBus.post(MainThreadEvents(Login(ServerData("a", server, isLAN))))
+                }
                 EPacket.LOGOUT -> LambdaEventBus.post(MainThreadEvents(Logout("Client received logout packet")))
                 EPacket.ADD_WORKER -> {
-                    //addWorker(args.joinToString { it })
-                    // TODO: Add worker to friendly list
+                    val worker = args.getOrElse(0) { return@safeListener }
+                    if (this.player.name == worker) return@safeListener
+                    fUtils.addFriend(worker)
                 }
                 EPacket.REMOVE_WORKER -> {
-                    //removeWorker(args.joinToString { it })
-                    // TODO: Remove worker to friendly list
+                    val worker = args.getOrElse(0) { return@safeListener }
+                    if (this.player.name == worker) return@safeListener
+                    fUtils.removeFriend(worker)
                 }
                 EPacket.INFORMATION -> {
                     val epacket = it.packet.getPacket()

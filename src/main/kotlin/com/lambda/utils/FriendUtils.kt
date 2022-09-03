@@ -31,8 +31,16 @@ class FriendUtils(private val friends: ArrayList<EntityPlayer> = ArrayList()) {
     fun addFriend(player: EntityPlayer) {
         if (!friends.contains(player)) friends.add(player)
     }
+    fun addFriend(player: String) {
+        val profile = getPlayerProfile(player) ?: return
+        if (!friends.contains(profile)) friends.add(profile)
+    }
     fun removeFriend(player: EntityPlayer) {
         if (friends.contains(player)) friends.remove(player)
+    }
+    fun removeFriend(player: String) {
+        val profile = getPlayerProfile(player) ?: return
+        if (friends.contains(profile)) friends.remove(profile)
     }
     fun isFriend(player: EntityPlayer): Boolean {
         return friends.contains(player)
