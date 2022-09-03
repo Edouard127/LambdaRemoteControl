@@ -14,8 +14,12 @@ import com.lambda.client.command.CommandManager
 import com.lambda.client.commons.utils.MathUtils
 import com.lambda.client.event.SafeClientEvent
 import com.lambda.client.event.listener.listener
+import com.lambda.client.manager.managers.FriendManager
 import com.lambda.client.module.Category
+import com.lambda.client.module.modules.combat.AutoLog
+import com.lambda.client.module.modules.combat.AutoLog.log
 import com.lambda.client.plugin.api.PluginModule
+import com.lambda.client.util.EntityUtils.isFakeOrSelf
 import com.lambda.client.util.items.originalName
 import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
@@ -25,16 +29,14 @@ import com.lambda.enums.EPacket
 import com.lambda.enums.EWorkerStatus
 import com.lambda.enums.EWorkerType
 import com.lambda.events.*
-import com.lambda.utils.BaritoneUtils
-import com.lambda.utils.Debug
-import com.lambda.utils.HighwayToolsHandler
-import com.lambda.utils.RotationUtils
+import com.lambda.utils.*
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiDisconnected
 import net.minecraft.client.gui.GuiMainMenu
 import net.minecraft.client.gui.GuiMultiplayer
 import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.ScreenShotHelper
 import net.minecraft.util.text.TextComponentString
 import net.minecraftforge.fml.client.FMLClientHandler
@@ -70,6 +72,7 @@ internal object RemoteControl : PluginModule(
     private val jUtils = JobUtils()
     private val bUtils = BaritoneUtils()
     private val rUtils = RotationUtils()
+    private val fUtils = FriendUtils()
     private var gameState = GameState.NONE
     private var serverData: ServerData? = null
     private var getScreenShot = false
@@ -125,12 +128,10 @@ internal object RemoteControl : PluginModule(
                     MessageSendHelper.sendServerMessage(args.joinToString(" "))
                 }
                 EPacket.BARITONE -> {
-                    if (jUtils.currentJob() == null) {
+                    jUtils.currentJob()?.run {
+                        // TODO: hacky fix for baritone
+                    } ?: run {
                         MessageSendHelper.sendBaritoneCommand(args.joinToString(" "))
-                    }
-                    else {
-                        MessageSendHelper.sendBaritoneCommand(args.joinToString(" "))
-                        MessageSendHelper.sendBaritoneCommand("stop")
                     }
                 }
                 EPacket.LAMBDA -> {
@@ -170,6 +171,13 @@ internal object RemoteControl : PluginModule(
         safeListener<TickEvent.ClientTickEvent> {
             jUtils.checkJobs()
             bUtils.pathingGoalCheck()
+            // TODO: Worker settings
+            for (entity in world.loadedEntityList) {
+                if (entity !is EntityPlayer) continue
+                if (entity.isFakeOrSelf) continue
+                if (!fUtils.isFriend(entity)) continue
+                gameState = GameState.LOGOUT
+            }
         }
         listener<TickEvent.ClientTickEvent> {
             when (gameState) {
@@ -366,5 +374,5 @@ fun ByteArray.chunk(size: Int): ArrayList<ByteArray> {
 enum class GameState {
     LOGIN,
     LOGOUT,
-    NONE,
+    NONE
 }
