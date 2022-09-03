@@ -123,7 +123,10 @@ internal object RemoteControl : PluginModule(
                     MessageSendHelper.sendServerMessage(args.joinToString(" "))
                 }
                 EPacket.BARITONE -> {
-                    if (args.joinToString(" ").contains("stop")) MessageSendHelper.sendBaritoneCommand("stop")
+                    if (args.joinToString(" ").contains("stop")) {
+                        MessageSendHelper.sendBaritoneCommand("stop")
+                        return@safeListener
+                    }
                     bUtils.queueCommand(args.joinToString(" "))
                 }
                 EPacket.LAMBDA -> {
