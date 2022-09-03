@@ -1,4 +1,4 @@
 package com.lambda.utils
 
 
-class Logout(val reason: String)
+class Logout(val reason: String) : Cloneable

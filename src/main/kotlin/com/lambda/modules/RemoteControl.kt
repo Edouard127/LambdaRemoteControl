@@ -22,6 +22,7 @@ import com.lambda.client.util.items.originalName
 import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
 import com.lambda.client.util.threads.onMainThread
+import com.lambda.client.util.threads.onMainThreadSafe
 import com.lambda.client.util.threads.safeListener
 import com.lambda.enums.*
 import com.lambda.events.*
@@ -167,58 +168,63 @@ internal object RemoteControl : PluginModule(
                 LambdaEventBus.post(MainThreadEvents(Logout("Player ${entity.name} is in your render distance")))
             }
         }
-        // TODO: Clone classes from the other thread
-        listener<MainThreadEvents> { threadEvents ->
-            if (threadEvents.instance is Login || threadEvents.instance is Logout || threadEvents.instance is Screenshot) {
-                when (threadEvents.instance) {
-                    is Login -> {
-                        val instanced = threadEvents.instance.javaClass.newInstance()
-                        login(instanced.server)
-                    }
+        suspend {
+            onMainThreadSafe {
+                // TODO: Clone classes from the other thread
+                listener<MainThreadEvents> { threadEvents ->
+                    if (threadEvents.instance is Login || threadEvents.instance is Logout || threadEvents.instance is Screenshot) {
+                        when (threadEvents.instance) {
+                            is Login -> {
+                                val instanced = threadEvents.cloneInstance<Login>() ?: return@listener
+                                login(instanced.server)
+                            }
 
-                    is Logout -> {
-                        val instanced = threadEvents.instance.javaClass.newInstance()
-                        logout(instanced.reason)
-                    }
+                            is Logout -> {
+                                val instanced = threadEvents.cloneInstance<Logout>() ?: return@listener
+                                logout(instanced.reason)
+                            }
 
-                    is Screenshot -> {
+                            is Screenshot -> {
 
-                        val width = FMLClientHandler.instance().client.displayWidth
-                        val height = FMLClientHandler.instance().client.displayHeight
-                        val frameBuffer = FMLClientHandler.instance().client.framebuffer
-                        val bufferImage = ScreenShotHelper.createScreenshot(width, height, frameBuffer)
+                                val width = FMLClientHandler.instance().client.displayWidth
+                                val height = FMLClientHandler.instance().client.displayHeight
+                                val frameBuffer = FMLClientHandler.instance().client.framebuffer
+                                val bufferImage = ScreenShotHelper.createScreenshot(width, height, frameBuffer)
 
-                        val bImage = bufferImage.compress(360, 640).toByteArray("png")
-                        // TODO: Find better way to get the length of the free memory
-                        val pLength = PacketBuilder(EPacket.SCREENSHOT, byteArrayOf()).buildPacket().getPacketLength()
-                        val size = 1024 - pLength
-                        val chunks = bImage.chunk(size)
-                        val fragmentOffsets = List(chunks.size) { i ->
-                            i * size
-                        }
+                                val bImage = bufferImage.compress(360, 640).toByteArray("png")
+                                // TODO: Find better way to get the length of the free memory
+                                val pLength = PacketBuilder(EPacket.SCREENSHOT, byteArrayOf()).buildPacket().getPacketLength()
+                                val size = 1024 - pLength
+                                val chunks = bImage.chunk(size)
+                                val fragmentOffsets = List(chunks.size) { i ->
+                                    i * size
+                                }
 
-                        val hashCode = bImage.hashCode()
-                        val chunkFragments = chunks.map { bytes ->
-                            Fragment(
-                                fragment = bytes,
-                                offset = fragmentOffsets.sum(),
-                                length = size,
-                                hash = hashCode,
-                                sum = chunks.sumOf { it.size }
-                            )
-                        }
+                                val hashCode = bImage.hashCode()
+                                val chunkFragments = chunks.map { bytes ->
+                                    Fragment(
+                                        fragment = bytes,
+                                        offset = fragmentOffsets.sum(),
+                                        length = size,
+                                        hash = hashCode,
+                                        sum = chunks.sumOf { it.size }
+                                    )
+                                }
 
-                        chunks.forEach {
-                            val packetBuilder = PacketBuilder(EPacket.SCREENSHOT, it)
-                            // TODO: Get the exact length of the packet
-                            val packet = Packet(pLength + size, packetBuilder)
-                            val fragmentPacket = FragmentedPacket(packet, chunkFragments)
-                            socket.send(fragmentPacket)
+                                chunks.forEach {
+                                    val packetBuilder = PacketBuilder(EPacket.SCREENSHOT, it)
+                                    // TODO: Get the exact length of the packet
+                                    val packet = Packet(pLength + size, packetBuilder)
+                                    val fragmentPacket = FragmentedPacket(packet, chunkFragments)
+                                    socket.send(fragmentPacket)
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+
         safeListener<JobEvents> {
             if (it.instance is Job) {
                     val epacket = EPacket.JOB
