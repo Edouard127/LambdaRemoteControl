@@ -11,7 +11,6 @@ abstract class Worker {
 
     var cancelled: Boolean = false
     var finished: Boolean = false
-    var working: Boolean = false
     abstract val entity: EntityPlayerSP
 
     abstract fun emitEvent(event: EJobEvents)

@@ -21,7 +21,6 @@ import com.lambda.client.util.EntityUtils.isFakeOrSelf
 import com.lambda.client.util.items.originalName
 import com.lambda.client.util.text.MessageSendHelper
 import com.lambda.client.util.text.MessageSendHelper.sendServerMessage
-import com.lambda.client.util.threads.onMainThread
 import com.lambda.client.util.threads.onMainThreadSafe
 import com.lambda.client.util.threads.safeListener
 import com.lambda.enums.*
@@ -111,7 +110,7 @@ internal object RemoteControl : PluginModule(
                 }
                 EPacket.INFORMATION -> {
                     val epacket = it.packet.getPacket()
-                    val playerInfo = playerInformations().encodeToByteArray()
+                    val playerInfo = FormatString(playerInformation()).encodeToByteArray()
                     val packetBuilder = PacketBuilder(epacket, playerInfo)
                     val packet = Packet(playerInfo.size, packetBuilder)
                     socket.send(packet)
@@ -156,7 +155,8 @@ internal object RemoteControl : PluginModule(
                     player.rotationPitch = playerRotation.y
 
                     val epacket = it.packet.getPacket()
-                    val rotation = it.packet.getData()
+                    val block = FormatString(player.rayTrace(5.0, 0.0f).toString().replace("=", ">"))
+                    val rotation = "Yaw+${player.rotationYaw}:Pitch+${player.rotationPitch}:Raytrace+${block}".encodeToByteArray()
                     val packetBuilder = PacketBuilder(epacket, rotation)
                     val packet = Packet(rotation.size, packetBuilder)
                     socket.send(packet)
@@ -295,29 +295,23 @@ private fun getScreen() = if (mc.isIntegratedServerRunning) {
     GuiMultiplayer(GuiMainMenu())
 }
 
-fun SafeClientEvent.playerInformations(): String =
-                "Player:${mc.player.name} " +
-                "Health:${mc.player.health} " +
-                "Food:${mc.player.foodStats.foodLevel} " +
-                "PlayersRender:${mc.world.playerEntities.size} " +
-                "Coordinates:${mc.player.position} " +
-                "MainHand:${mc.player.heldItemMainhand.originalName} " +
-                "OffHand:${mc.player.heldItemOffhand.originalName} "+
-                if(player.isSprinting) "Sprinting " else "NotSprinting " +
-                if(mc.player.isSneaking) "Sneaking " else "NotSneaking "+
-                inventory()+
-                if(hasArmor()) armorInformations() else "NoArmor "+
-                serverData()
-fun SafeClientEvent.armorInformations(): String = mc.player.armorInventoryList.reversed().joinToString(",") { "${it.originalName}:${MathUtils.round((it.maxDamage - it.itemDamage) / it.maxDamage.toFloat() * 100.0f, 1).toFloat()}" }+" "
+private fun FormatString(string: String): String = string.replace("=", "+").replace(" ", ";")
+
+fun SafeClientEvent.playerInformation(): String =
+                "Player+${mc.player.name}:" +
+                "Health+${mc.player.health}:" +
+                "Food+${mc.player.foodStats.foodLevel}:" +
+                "Players;in;render+${mc.world.playerEntities.size}:" +
+                "Coordinates+${mc.player.position}:" +
+                "Main;hand+${mc.player.heldItemMainhand.originalName}:" +
+                "Off;hand+${mc.player.heldItemOffhand.originalName}:"+
+                if(player.isSprinting) "Sprinting+yes:" else "Sprinting+no:"+
+                if(mc.player.isSneaking) "Sneaking+yes:" else "Sneaking+no:"+
+                "Inventory+${inventory()}:"+
+                if(hasArmor()) "Armor+${armorInformation()}" else "Armor+none"
+fun SafeClientEvent.armorInformation(): String = mc.player.armorInventoryList.reversed().joinToString(", ") { "${it.originalName};${MathUtils.round((it.maxDamage - it.itemDamage) / it.maxDamage.toFloat() * 100.0f, 1).toFloat()}" }
 fun SafeClientEvent.hasArmor(): Boolean = mc.player.armorInventoryList.any { !it.isEmpty }
-fun SafeClientEvent.inventory(): String = "Inventory:"+player.inventory.mainInventory.joinToString(separator = ",") { it.originalName }+" "
-fun SafeClientEvent.serverData(): String {
-    player.server?.let {
-        return "Players:${it.playerList.players.size} "+
-                "MaxPlayers:${it.playerList.maxPlayers} "
-    }
-    return "NoServer "
-}
+fun SafeClientEvent.inventory(): String = player.inventory.mainInventory.joinToString(separator = ", ") { it.originalName }
 
 fun BufferedImage.compress(w: Int, h: Int): BufferedImage {
     val img: BufferedImage = BufferedImage(w, h, BufferedImage.TYPE_INT_RGB)

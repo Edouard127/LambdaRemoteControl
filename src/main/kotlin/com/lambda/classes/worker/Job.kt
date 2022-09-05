@@ -15,7 +15,7 @@ class Job
     : Worker() {
 
 
-    override fun getJob(): String = "Job type:${this.type.byte} Status:${BaritoneUtils().status.byte} Goal:${this.goal} Player:${mc.player.name} "+if (this.working) "Position: ${mc.player.position}" else "Scheduled"
+    override fun getJob(): String = "Job;type+${this.type.byte}:Status+${BaritoneUtils().status.byte}:Goal+${this.goal}:Player+${mc.player.name}:Position+${mc.player.position}"
     override fun end() {
         this.finished = true
         this.emitEvent(EJobEvents.JOB_FINISHED)

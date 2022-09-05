@@ -26,7 +26,7 @@ class JobUtils(private val jobs: MutableList<JobTracker> = mutableListOf()) {
         }
     }
     fun currentJob(): JobTracker? = jobs.firstOrNull()
-    fun getJobsString(): String = jobs.joinToString("\n") { it.job.toString() }
+    fun getJobsString(): String = jobs.joinToString(", ") { it.job.getJob() }
     fun addJob(job: JobTracker) {
         jobs.add(job)
     }
