@@ -303,20 +303,20 @@ fun SafeClientEvent.playerInformations(): String =
                 "Coordinates:${mc.player.position} " +
                 "MainHand:${mc.player.heldItemMainhand.originalName} " +
                 "OffHand:${mc.player.heldItemOffhand.originalName} "+
-                if(player.isSprinting) "Sprinting" else "NotSprinting " +
+                if(player.isSprinting) "Sprinting " else "NotSprinting " +
                 if(mc.player.isSneaking) "Sneaking " else "NotSneaking "+
                 inventory()+
-                if(hasArmor()) armorInformations() else "NoArmor"+
+                if(hasArmor()) armorInformations() else "NoArmor "+
                 serverData()
-fun SafeClientEvent.armorInformations(): String = mc.player.armorInventoryList.reversed().joinToString(",") { "${it.originalName}:${MathUtils.round((it.maxDamage - it.itemDamage) / it.maxDamage.toFloat() * 100.0f, 1).toFloat()}" }
+fun SafeClientEvent.armorInformations(): String = mc.player.armorInventoryList.reversed().joinToString(",") { "${it.originalName}:${MathUtils.round((it.maxDamage - it.itemDamage) / it.maxDamage.toFloat() * 100.0f, 1).toFloat()}" }+" "
 fun SafeClientEvent.hasArmor(): Boolean = mc.player.armorInventoryList.any { !it.isEmpty }
-fun SafeClientEvent.inventory(): String = "Inventory:"+player.inventory.mainInventory.joinToString(separator = ",") { it.originalName }
+fun SafeClientEvent.inventory(): String = "Inventory:"+player.inventory.mainInventory.joinToString(separator = ",") { it.originalName }+" "
 fun SafeClientEvent.serverData(): String {
     player.server?.let {
         return "Players:${it.playerList.players.size} "+
                 "MaxPlayers:${it.playerList.maxPlayers} "
     }
-    return "NoServer"
+    return "NoServer "
 }
 
 fun BufferedImage.compress(w: Int, h: Int): BufferedImage {
